@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Brief Backlog — Cycle 2026-05-05</title>
+<style>
+  :root {
+    --primary: #1a202c;
+    --bg-soft: #f7fafc;
+    --border: #e2e8f0;
+    --text-soft: #4a5568;
+    --text-dim: #718096;
+    --scale: #2c7a7b;
+    --iterate: #d97706;
+    --explore: #6b46c1;
+    --kill: #c53030;
+    --exploit: #1b7837;
+    --explore-tag: #f6ad55;
+    --specialist: #2c5282;
+    --high-conf: #166534;
+    --med-conf: #ca8a04;
+    --explore-tier: #6b46c1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--primary);
+    line-height: 1.5;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+    background: white;
+    font-size: 14px;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin: 0; padding-bottom: 8px; border-bottom: 3px solid var(--primary); }
+  h2 { font-size: 22px; margin: 40px 0 16px; padding: 8px 0; border-bottom: 2px solid var(--border); }
+  h2 .count { color: var(--text-dim); font-weight: 400; font-size: 14px; }
+  code { background: var(--bg-soft); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .meta-strip {
+    background: var(--primary); color: white; padding: 10px 16px; font-size: 12px;
+    border-radius: 4px; margin: 16px 0 24px; display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .meta-strip span { opacity: 0.9; }
+  .meta-strip b { color: #fbbf24; }
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0 32px; }
+  .summary-card { padding: 14px; border-radius: 6px; text-align: center; border: 1px solid var(--border); }
+  .summary-num { font-size: 28px; font-weight: 700; }
+  .summary-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card.scale { border-top: 3px solid var(--scale); }
+  .summary-card.iterate { border-top: 3px solid var(--iterate); }
+  .summary-card.explore { border-top: 3px solid var(--explore); }
+  .summary-card.kill { border-top: 3px solid var(--kill); }
+  .summary-card.total { border-top: 3px solid var(--primary); }
+  .summary-card.scale .summary-num { color: var(--scale); }
+  .summary-card.iterate .summary-num { color: var(--iterate); }
+  .summary-card.explore .summary-num { color: var(--explore); }
+  .summary-card.kill .summary-num { color: var(--kill); }
+
+  .intro {
+    background: #fffbea; border-left: 4px solid #f59e0b; padding: 16px 20px;
+    border-radius: 4px; margin: 16px 0 32px; font-size: 14px; line-height: 1.6;
+  }
+  .intro b { color: var(--primary); }
+
+  .concept-card {
+    border: 1px solid var(--border); border-radius: 6px; margin: 16px 0;
+    padding: 18px 20px; background: white;
+  }
+  .concept-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .concept-id { font-size: 18px; font-weight: 700; }
+  .concept-class { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .concept-stats { margin-left: auto; font-size: 12px; color: var(--text-soft); display: flex; gap: 16px; }
+  .concept-stats b { color: var(--primary); }
+  .concept-badge {
+    padding: 3px 10px; border-radius: 11px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; color: white;
+  }
+  .badge-scale { background: var(--scale); }
+  .badge-iterate { background: var(--iterate); }
+  .badge-explore { background: var(--explore); }
+  .badge-kill { background: var(--kill); }
+  .concept-rationale { font-size: 13px; color: var(--text-soft); margin: 8px 0 14px; line-height: 1.55; }
+
+  .dna-section { background: var(--bg-soft); padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  .dna-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+  .dna-chip { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+  .dna-chip b { color: #22543d; }
+  .periph-chip { background: #edf2f7; color: var(--text-soft); border: 1px solid var(--border); }
+
+  .target-name { background: #fff5f5; padding: 8px 14px; border-radius: 4px; margin: 8px 0; font-size: 13px; border-left: 3px solid var(--kill); }
+  .target-name .blank { color: var(--text-dim); font-style: italic; }
+
+  .versions-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
+
+  .version {
+    border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px;
+    margin: 8px 0; background: white; border-left: 3px solid var(--text-dim);
+  }
+  .version-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .version-label { font-weight: 700; font-size: 14px; }
+  .hypothesis-id { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: var(--text-dim); background: var(--bg-soft); padding: 2px 8px; border-radius: 3px; }
+  .version-intent { font-size: 13px; color: var(--text-soft); margin-bottom: 10px; }
+
+  .changes { margin: 8px 0; }
+  .change-row { font-size: 13px; margin: 4px 0; }
+  .change-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 6px; }
+  .from { color: var(--kill); text-decoration: line-through; }
+  .to { color: var(--scale); font-weight: 600; }
+
+  .evidence-block {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 8px 0; margin-top: 10px; font-size: 12px; color: var(--text-soft);
+    border-top: 1px dashed var(--border);
+  }
+  .evidence-badge {
+    padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; color: white;
+  }
+  .tier-high { background: var(--high-conf); }
+  .tier-med { background: var(--med-conf); }
+  .tier-explore { background: var(--explore-tier); }
+  .expected-lift b { color: var(--primary); font-size: 13px; }
+  .evidence-n { color: var(--text-dim); }
+  .evidence-rationale { font-size: 12px; color: var(--text-soft); margin: 8px 0 4px; line-height: 1.55; font-style: italic; }
+
+  .concept-routing {
+    background: #eef2f7; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 13px;
+    border-left: 4px solid var(--specialist);
+  }
+  .concept-routing .routing-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; font-weight: 600; }
+  .concept-routing .routing-row { margin: 5px 0; }
+  .concept-routing .routing-row b { color: var(--primary); }
+
+  .inline-routing {
+    background: #f8fafc; padding: 6px 10px; border-radius: 3px; margin-top: 8px; font-size: 11px;
+    color: var(--text-soft);
+  }
+  .inline-routing-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 5px; }
+
+  .hard-flag {
+    background: #fef3c7; color: #92400e; padding: 6px 10px; border-radius: 3px; margin-top: 8px;
+    font-size: 11px; font-weight: 600;
+  }
+
+  .tag-exploit, .tag-explore, .tag-specialist {
+    display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: white; margin-right: 6px;
+  }
+  .tag-exploit { background: var(--exploit); }
+  .tag-explore { background: var(--explore-tag); color: #1a202c; }
+  .tag-specialist { background: var(--specialist); }
+
+  .kill-card {
+    border: 1px solid var(--kill); border-radius: 6px; padding: 14px 18px;
+    margin: 8px 0; background: #fff5f5;
+  }
+  .kill-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .kill-stats { font-size: 13px; color: var(--text-soft); }
+  .kill-rationale { font-size: 13px; margin: 8px 0; line-height: 1.55; color: var(--primary); }
+  .kill-savings { font-size: 12px; color: var(--scale); font-weight: 600; }
+
+  .repetition-callout {
+    background: #ecfeff; border-left: 4px solid #0891b2; padding: 14px 20px;
+    border-radius: 4px; margin: 16px 0 24px; font-size: 13px; line-height: 1.65;
+  }
+  .repetition-callout b { color: var(--primary); }
+  .repetition-callout code { background: white; }
+
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Brief Backlog — Cycle 2026-05-05</h1>
+<div class="meta-strip">
+  <span>Audience: <b>Creative Director + Creative Producer</b></span>
+  <span>Hypotheses: <b>39</b></span>
+  <span>Versions to brief: <b>39</b></span>
+  <span>Active concepts: <b>13</b></span>
+  <span>Kill recommendations: <b>3</b></span>
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card scale">
+    <div class="summary-num">5</div>
+    <div class="summary-label">SCALE</div>
+  </div>
+  <div class="summary-card iterate">
+    <div class="summary-num">5</div>
+    <div class="summary-label">ITERATE</div>
+  </div>
+  <div class="summary-card explore">
+    <div class="summary-num">3</div>
+    <div class="summary-label">EXPLORE</div>
+  </div>
+  <div class="summary-card kill">
+    <div class="summary-num">3</div>
+    <div class="summary-label">KILL</div>
+  </div>
+  <div class="summary-card total">
+    <div class="summary-num">39</div>
+    <div class="summary-label">total versions</div>
+  </div>
+</div>
+
+<div class="intro">
+<b>How to read this document.</b> Every recommendation below is anchored to evidence from the corrected Lumina D7 pipeline (cycle 2026-05-05). Each concept has a rationale and a list of versions to produce; each version specifies what to <em>change</em> from the existing DNA. Hypothesis IDs (e.g. <code>H-2026-05-05-001</code>) follow each recommendation so they can be referenced in briefs and resolved against next cycle's data.<br><br>
+
+<b>Terminology.</b> The <b>4-tag DNA categories</b> — <code>strategic_angle</code>, <code>hook</code>, <code>creative_focus</code>, <code>gameplay_narrative_arc</code> — carry concept identity (61% of mutual information with concept_id). The other 5 categories are peripheral execution choices. The <b>3 Reliable Winners</b> are specific tag <em>values</em> within 3 of those DNA categories (<code>Cognitive Challenge</code>, <code>Fail → Win</code>, <code>Problem Statement</code>) that lift Lumina D7 at p&lt;0.01.<br><br>
+
+<b>Variation design.</b> Each new version of an existing concept varies <em>one</em> peripheral tag while holding DNA constant. We only test peripherals with <em>defensible positive evidence</em> across the portfolio: <code>None (Silent)</code> for audio, <code>Core Loop / Real-gameplay</code> for representation, <code>Always-On Banner</code> for CTA. After 5+ cycles of structured variation, we'll have controlled experimental data to compute concept-fixed-effect tag lifts.<br><br>
+
+<b>Producer routing.</b> Each concept gets a <em>concept-level</em> routing recommendation based on each producer's track record across the concept's 4 DNA tags. EXPLOIT = highest weighted-lift producer; EXPLORE = producer with thin reps on the DNA (capability-building). Per-version routing only appears as an inline flag when a specific version uses a Hard-difficulty tag (rare in this cycle).
+</div>
+
+<h2>SCALE briefs <span class="count">— 5 CONSISTENT WINNERS, hold DNA, vary one peripheral per version</span></h2>
+
+<div class="repetition-callout">
+<b>Why every SCALE brief looks structurally identical.</b> All 5 SCALE concepts get the same 3 version prescriptions: V1 = <code>None (Silent)</code> audio, V2 = <code>Core Loop / Real-gameplay</code> representation, V3 = <code>Always-On Banner</code> CTA. <b>This is deliberate.</b> Five different proven concepts each running the same 3 controlled peripheral swaps gives us, after this cycle plus a few more, <b>5 × 3 = 15 within-concept comparisons</b> on the same peripheral swap — the data-generating mechanism this dataset has been missing. Today's tag lifts are observational (concept-confounded); the structured repetition is what turns them into causal evidence we can trust. The visual sameness across the 5 SCALE blocks is the feature, not a bug.
+</div>
+
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C518</div>
+        <span class='concept-badge badge-scale'>SCALE</span>
+        <span class='concept-class'>CONSISTENT WINNER</span>
+        <div class='concept-stats'>
+          <span><b>5</b> versions shipped</span>
+          <span>avg D7 = <b>79.4</b></span>
+          <span>std = <b>13.3</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C518 is a CONSISTENT WINNER (avg D7=79.4, std=13.3, 5 versions). Goal: hold the proven DNA and systematically vary ONE peripheral tag per new version. The 3 versions below test the 3 peripheral swaps with positive cross-concept evidence — generating data the concept currently lacks.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Cognitive Challenge</span><span class='chip dna-chip'><b>hook:</b> Problem Statement</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Fail → Win</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.9% weighted (n=41 on DNA tags, 2/4 covered) · <b>Yevhenii Hrushetskyi</b> +5.9% weighted (n=97 on DNA tags, 4/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=12 on DNA tags (build capability) · <b>Ayca Uyanik</b> n=18 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-001</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-002</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-003</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C431</div>
+        <span class='concept-badge badge-scale'>SCALE</span>
+        <span class='concept-class'>CONSISTENT WINNER</span>
+        <div class='concept-stats'>
+          <span><b>3</b> versions shipped</span>
+          <span>avg D7 = <b>73.0</b></span>
+          <span>std = <b>14.2</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C431 is a CONSISTENT WINNER (avg D7=73.0, std=14.2, 3 versions). Goal: hold the proven DNA and systematically vary ONE peripheral tag per new version. The 3 versions below test the 3 peripheral swaps with positive cross-concept evidence — generating data the concept currently lacks.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Progress & Achievement</span><span class='chip dna-chip'><b>hook:</b> None (No Hook)</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Fail → Win</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +10.1% weighted (n=89 on DNA tags, 3/4 covered) · <b>Yevhenii Hrushetskyi</b> +7.4% weighted (n=123 on DNA tags, 4/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=19 on DNA tags (build capability) · <b>Ana Narchemashvili</b> n=10 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-004</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-005</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-006</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C419</div>
+        <span class='concept-badge badge-scale'>SCALE</span>
+        <span class='concept-class'>CONSISTENT WINNER</span>
+        <div class='concept-stats'>
+          <span><b>4</b> versions shipped</span>
+          <span>avg D7 = <b>71.8</b></span>
+          <span>std = <b>8.2</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C419 is a CONSISTENT WINNER (avg D7=71.8, std=8.2, 4 versions). Goal: hold the proven DNA and systematically vary ONE peripheral tag per new version. The 3 versions below test the 3 peripheral swaps with positive cross-concept evidence — generating data the concept currently lacks.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Cognitive Challenge</span><span class='chip dna-chip'><b>hook:</b> Problem Statement</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Fail → Win</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.9% weighted (n=41 on DNA tags, 2/4 covered) · <b>Yevhenii Hrushetskyi</b> +5.9% weighted (n=97 on DNA tags, 4/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=12 on DNA tags (build capability) · <b>Ayca Uyanik</b> n=18 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-007</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-008</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-009</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C504</div>
+        <span class='concept-badge badge-scale'>SCALE</span>
+        <span class='concept-class'>CONSISTENT WINNER</span>
+        <div class='concept-stats'>
+          <span><b>5</b> versions shipped</span>
+          <span>avg D7 = <b>68.6</b></span>
+          <span>std = <b>8.3</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C504 is a CONSISTENT WINNER (avg D7=68.6, std=8.3, 5 versions). Goal: hold the proven DNA and systematically vary ONE peripheral tag per new version. The 3 versions below test the 3 peripheral swaps with positive cross-concept evidence — generating data the concept currently lacks.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Progress & Achievement</span><span class='chip dna-chip'><b>hook:</b> Problem Statement</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Fail → Win</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.9% weighted (n=41 on DNA tags, 2/4 covered) · <b>Yevhenii Hrushetskyi</b> +9.6% weighted (n=103 on DNA tags, 4/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=12 on DNA tags (build capability) · <b>Ayca Uyanik</b> n=18 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-010</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-011</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-012</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C469</div>
+        <span class='concept-badge badge-scale'>SCALE</span>
+        <span class='concept-class'>CONSISTENT WINNER</span>
+        <div class='concept-stats'>
+          <span><b>3</b> versions shipped</span>
+          <span>avg D7 = <b>65.7</b></span>
+          <span>std = <b>2.3</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C469 is a CONSISTENT WINNER (avg D7=65.7, std=2.3, 3 versions). Goal: hold the proven DNA and systematically vary ONE peripheral tag per new version. The 3 versions below test the 3 peripheral swaps with positive cross-concept evidence — generating data the concept currently lacks.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> Surprise / Unexpected</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.5% weighted (n=140 on DNA tags, 4/4 covered) · <b>Alexandre de Crozals</b> +9.1% weighted (n=22 on DNA tags, 3/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Ayca Uyanik</b> n=65 on DNA tags (build capability) · <b>Jeremy Laplatine</b> n=601 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-013</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-014</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-015</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+<h2>ITERATE briefs <span class="count">— 5 HIGH-CEILING BETS, hold DNA, more aggressive peripheral variation</span></h2>
+
+<div class="repetition-callout">
+<b>Same 3 peripheral swaps, plus a 4th DNA-swap version where evidence supports it.</b> ITERATE briefs mirror the SCALE design (V1–V3 are the same 3 defensible peripheral swaps) so we can compare peripheral effects on CONSISTENT WINNERS vs HIGH-CEILING BETs directly. Where within-concept evidence already supports a DNA-tag swap, a V4 is added — flagged as a DNA change because the resulting creative effectively becomes a sibling concept rather than a tighter version of the same idea.
+</div>
+
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C484</div>
+        <span class='concept-badge badge-iterate'>ITERATE</span>
+        <span class='concept-class'>HIGH-CEILING BET</span>
+        <div class='concept-stats'>
+          <span><b>7</b> versions shipped</span>
+          <span>avg D7 = <b>67.9</b></span>
+          <span>std = <b>25.6</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C484 is a HIGH-CEILING BET (avg D7=67.9, std=25.6, 7 versions). High within-concept variance means the best version beats the worst by a lot — iteration captures real upside. The 3 peripheral variation versions below mirror the SCALE briefs (same defensible swaps); a 4th DNA-swap version is added when within-concept evidence supports it.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Cognitive Challenge</span><span class='chip dna-chip'><b>hook:</b> Problem Statement</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Fail → Win</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.9% weighted (n=41 on DNA tags, 2/4 covered) · <b>Yevhenii Hrushetskyi</b> +5.9% weighted (n=97 on DNA tags, 4/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=12 on DNA tags (build capability) · <b>Ayca Uyanik</b> n=18 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-016</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-017</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-018</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C488</div>
+        <span class='concept-badge badge-iterate'>ITERATE</span>
+        <span class='concept-class'>HIGH-CEILING BET</span>
+        <div class='concept-stats'>
+          <span><b>6</b> versions shipped</span>
+          <span>avg D7 = <b>65.3</b></span>
+          <span>std = <b>23.4</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C488 is a HIGH-CEILING BET (avg D7=65.3, std=23.4, 6 versions). High within-concept variance means the best version beats the worst by a lot — iteration captures real upside. The 3 peripheral variation versions below mirror the SCALE briefs (same defensible swaps); a 4th DNA-swap version is added when within-concept evidence supports it.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> None (No Hook)</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +15.0% weighted (n=179 on DNA tags, 4/4 covered) · <b>Alexandre de Crozals</b> +5.2% weighted (n=13 on DNA tags, 2/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Jeremy Laplatine</b> n=605 on DNA tags (build capability) · <b>Ana Narchemashvili</b> n=10 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-019</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-020</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-021</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C523</div>
+        <span class='concept-badge badge-iterate'>ITERATE</span>
+        <span class='concept-class'>HIGH-CEILING BET</span>
+        <div class='concept-stats'>
+          <span><b>6</b> versions shipped</span>
+          <span>avg D7 = <b>62.7</b></span>
+          <span>std = <b>29.1</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C523 is a HIGH-CEILING BET (avg D7=62.7, std=29.1, 6 versions). High within-concept variance means the best version beats the worst by a lot — iteration captures real upside. The 3 peripheral variation versions below mirror the SCALE briefs (same defensible swaps); a 4th DNA-swap version is added when within-concept evidence supports it.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> None (No Hook)</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Levels mix</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +13.5% weighted (n=139 on DNA tags, 4/4 covered) · <b>Alexandre de Crozals</b> +5.2% weighted (n=13 on DNA tags, 2/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Vira Bilous</b> n=36 on DNA tags (build capability) · <b>Ana Narchemashvili</b> n=10 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-022</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-023</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-024</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>Always-On Banner</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>R1626</div>
+        <span class='concept-badge badge-iterate'>ITERATE</span>
+        <span class='concept-class'>HIGH-CEILING BET</span>
+        <div class='concept-stats'>
+          <span><b>6</b> versions shipped</span>
+          <span>avg D7 = <b>62.4</b></span>
+          <span>std = <b>25.2</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>R1626 is a HIGH-CEILING BET (avg D7=62.4, std=25.2, 6 versions). High within-concept variance means the best version beats the worst by a lot — iteration captures real upside. The 3 peripheral variation versions below mirror the SCALE briefs (same defensible swaps); a 4th DNA-swap version is added when within-concept evidence supports it.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> Surprise / Unexpected</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.5% weighted (n=140 on DNA tags, 4/4 covered) · <b>Alexandre de Crozals</b> +9.1% weighted (n=22 on DNA tags, 3/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Ayca Uyanik</b> n=65 on DNA tags (build capability) · <b>Jeremy Laplatine</b> n=601 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-025</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-026</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-027</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>None (No CTA)</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>C524</div>
+        <span class='concept-badge badge-iterate'>ITERATE</span>
+        <span class='concept-class'>HIGH-CEILING BET</span>
+        <div class='concept-stats'>
+          <span><b>5</b> versions shipped</span>
+          <span>avg D7 = <b>62.3</b></span>
+          <span>std = <b>23.0</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>C524 is a HIGH-CEILING BET (avg D7=62.3, std=23.0, 5 versions). High within-concept variance means the best version beats the worst by a lot — iteration captures real upside. The 3 peripheral variation versions below mirror the SCALE briefs (same defensible swaps); a 4th DNA-swap version is added when within-concept evidence supports it.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Hold the existing DNA constant:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Explore/Discovery</span><span class='chip dna-chip'><b>hook:</b> Surprise / Unexpected</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='concept-routing'>
+<div class='routing-label'>Concept-level producer routing — based on DNA-tag track records</div>
+<div class='routing-row'><span class='tag-exploit'>EXPLOIT</span> <b>Julie Droz</b> +20.2% weighted (n=94 on DNA tags, 4/4 covered) · <b>Alexandre de Crozals</b> +11.0% weighted (n=14 on DNA tags, 2/4 covered)</div>
+<div class='routing-row'><span class='tag-explore'>EXPLORE</span> <b>Ayca Uyanik</b> n=45 on DNA tags (build capability) · <b>Jeremy Laplatine</b> n=443 on DNA tags (build capability)</div>
+</div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-028</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>Exaggerated / Aspirational gameplay</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-029</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>Music/SFX</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — Always-On Banner (cta_strategy)</div>
+        <div class="hypothesis-id">H-2026-05-05-030</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary cta_strategy to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>cta_strategy</code>: <span class='from'>End-Card Only</span> → <span class='to'>Always-On Banner</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+5.0%</b></span>
+        <span class='evidence-n'>n = 46</span>
+      </div>
+      <div class='evidence-rationale'>Always-On Banner shows a +5.0% Lumina D7 lift across 46 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+<h2>EXPLORE briefs <span class="count">— 3 new concepts on under-explored DNA recipes</span></h2>
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>NEW: Recipe-01-Relax&Esca-Order→Ch</div>
+        <span class='concept-badge badge-explore'>EXPLORE</span>
+        <span class='concept-class'>Under-explored DNA recipe</span>
+        <div class='concept-stats'>
+          <span><b>3</b> creatives in this DNA today</span>
+          <span>observed avg D7 = <b>73.0</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>This 4-tag DNA combination has 3 existing creatives averaging D7=73.0. The recipe is flagged is_underexplored=True (appears far less often than expected given the tag distribution). Probe whether the signal scales as a fresh concept.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Prescribed DNA for the new concept:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> None (No Hook)</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='target-name'>
+        <b>target_concept_name:</b> <span class='blank'>[Creative Producer assigns]</span> &nbsp;·&nbsp;
+        <b>Producer routing:</b> <span class='blank'>To be decided when concept_id is assigned — per-version best-executor info shown inline below.</span>
+      </div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Recipe replication</div>
+        <div class="hypothesis-id">H-2026-05-05-031</div>
+      </div>
+      <div class="version-intent">Replicate the observed-good DNA combination as a fresh concept. Measures whether the recipe's signal in existing creatives transfers when a brand-new concept_id is shipped under it.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <em>(no change — replicate as-is)</em></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-explore'>EXPLORATORY</span>
+        <span class='expected-lift'>Expected D7 lift: <b>~73 D7 (matching observed cohort avg)</b></span>
+        <span class='evidence-n'>n = 3</span>
+      </div>
+      <div class='evidence-rationale'>Existing creatives in this DNA (n=3) average D7=73.0. Replicating the recipe as a fresh concept tests whether the signal is real or sample-size-driven.</div>
+      <div class='hard-flag'>⚠ Hard-difficulty tag</div>
+      <div class='inline-routing'><span class='inline-routing-label'>Best on this tag value:</span> <b>Julie Droz</b> +15.6% (n=51) · <b>Nikola Kachanski</b> +2.7% (n=231)</div>
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-032</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>varies</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      <div class='inline-routing'><span class='inline-routing-label'>Best on this tag value:</span> <b>Alexandre de Crozals</b> +-13.8% (n=11)</div>
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-033</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>varies</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>NEW: Recipe-02-Destruction-None(NoA</div>
+        <span class='concept-badge badge-explore'>EXPLORE</span>
+        <span class='concept-class'>Under-explored DNA recipe</span>
+        <div class='concept-stats'>
+          <span><b>4</b> creatives in this DNA today</span>
+          <span>observed avg D7 = <b>66.4</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>This 4-tag DNA combination has 4 existing creatives averaging D7=66.4. The recipe is flagged is_underexplored=True (appears far less often than expected given the tag distribution). Probe whether the signal scales as a fresh concept.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Prescribed DNA for the new concept:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Destruction & Chaos</span><span class='chip dna-chip'><b>hook:</b> Social Proof</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> None (No Arc)</span></div>
+      </div>
+      <div class='target-name'>
+        <b>target_concept_name:</b> <span class='blank'>[Creative Producer assigns]</span> &nbsp;·&nbsp;
+        <b>Producer routing:</b> <span class='blank'>To be decided when concept_id is assigned — per-version best-executor info shown inline below.</span>
+      </div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Recipe replication</div>
+        <div class="hypothesis-id">H-2026-05-05-034</div>
+      </div>
+      <div class="version-intent">Replicate the observed-good DNA combination as a fresh concept. Measures whether the recipe's signal in existing creatives transfers when a brand-new concept_id is shipped under it.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <em>(no change — replicate as-is)</em></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-explore'>EXPLORATORY</span>
+        <span class='expected-lift'>Expected D7 lift: <b>~66 D7 (matching observed cohort avg)</b></span>
+        <span class='evidence-n'>n = 4</span>
+      </div>
+      <div class='evidence-rationale'>Existing creatives in this DNA (n=4) average D7=66.4. Replicating the recipe as a fresh concept tests whether the signal is real or sample-size-driven.</div>
+      
+      
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-035</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>varies</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      <div class='inline-routing'><span class='inline-routing-label'>Best on this tag value:</span> <b>Alexandre de Crozals</b> +-13.8% (n=11)</div>
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-036</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>varies</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+    <div class='concept-card'>
+      <div class='concept-head'>
+        <div class='concept-id'>NEW: Recipe-03-Relax&Esca-Order→Ch</div>
+        <span class='concept-badge badge-explore'>EXPLORE</span>
+        <span class='concept-class'>Under-explored DNA recipe</span>
+        <div class='concept-stats'>
+          <span><b>4</b> creatives in this DNA today</span>
+          <span>observed avg D7 = <b>66.3</b></span>
+        </div>
+      </div>
+      <div class='concept-rationale'>This 4-tag DNA combination has 4 existing creatives averaging D7=66.3. The recipe is flagged is_underexplored=True (appears far less often than expected given the tag distribution). Probe whether the signal scales as a fresh concept.</div>
+      <div class='dna-section'>
+        <div class='dna-label'>Prescribed DNA for the new concept:</div>
+        <div class='chip-row'><span class='chip dna-chip'><b>strategic_angle:</b> Relax & Escape</span><span class='chip dna-chip'><b>hook:</b> None (No Hook)</span><span class='chip dna-chip'><b>creative_focus:</b> Gameplay Mechanic</span><span class='chip dna-chip'><b>gameplay_narrative_arc:</b> Order → Chaos</span></div>
+      </div>
+      <div class='target-name'>
+        <b>target_concept_name:</b> <span class='blank'>[Creative Producer assigns]</span> &nbsp;·&nbsp;
+        <b>Producer routing:</b> <span class='blank'>To be decided when concept_id is assigned — per-version best-executor info shown inline below.</span>
+      </div>
+      <div class='versions-section'>
+        <div class='versions-label'>Version-by-version prescription (3):</div>
+        
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V1 — Recipe replication</div>
+        <div class="hypothesis-id">H-2026-05-05-037</div>
+      </div>
+      <div class="version-intent">Replicate the observed-good DNA combination as a fresh concept. Measures whether the recipe's signal in existing creatives transfers when a brand-new concept_id is shipped under it.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <em>(no change — replicate as-is)</em></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-explore'>EXPLORATORY</span>
+        <span class='expected-lift'>Expected D7 lift: <b>~66 D7 (matching observed cohort avg)</b></span>
+        <span class='evidence-n'>n = 4</span>
+      </div>
+      <div class='evidence-rationale'>Existing creatives in this DNA (n=4) average D7=66.3. Replicating the recipe as a fresh concept tests whether the signal is real or sample-size-driven.</div>
+      <div class='hard-flag'>⚠ Hard-difficulty tag</div>
+      <div class='inline-routing'><span class='inline-routing-label'>Best on this tag value:</span> <b>Julie Droz</b> +15.6% (n=51) · <b>Nikola Kachanski</b> +2.7% (n=231)</div>
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V2 — Core Loop / Real-gameplay (gameplay_representation)</div>
+        <div class="hypothesis-id">H-2026-05-05-038</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary gameplay_representation to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>gameplay_representation</code>: <span class='from'>varies</span> → <span class='to'>Core Loop / Real-gameplay</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-med'>MEDIUM CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+16.5%</b></span>
+        <span class='evidence-n'>n = 28</span>
+      </div>
+      <div class='evidence-rationale'>Core Loop / Real-gameplay shows a +16.5% Lumina D7 lift across 28 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      <div class='inline-routing'><span class='inline-routing-label'>Best on this tag value:</span> <b>Alexandre de Crozals</b> +-13.8% (n=11)</div>
+    </div>
+    
+
+    <div class="version">
+      <div class="version-head">
+        <div class="version-label">V3 — None (Silent) (audio_narration)</div>
+        <div class="hypothesis-id">H-2026-05-05-039</div>
+      </div>
+      <div class="version-intent">Hold DNA constant; vary audio_narration to test whether the under-invested choice lifts performance.</div>
+      <div class="changes">
+        <div class='change-row'><span class='change-label'>Primary change:</span> <code>audio_narration</code>: <span class='from'>varies</span> → <span class='to'>None (Silent)</span></div>
+        
+      </div>
+      <div class='evidence-block'>
+        <span class='evidence-badge tier-high'>HIGH CONFIDENCE</span>
+        <span class='expected-lift'>Expected D7 lift: <b>+13.7%</b></span>
+        <span class='evidence-n'>n = 107</span>
+      </div>
+      <div class='evidence-rationale'>None (Silent) shows a +13.7% Lumina D7 lift across 107 creatives portfolio-wide. Currently under-invested in production — worth testing on this concept's next versions.</div>
+      
+      
+    </div>
+    
+      </div>
+    </div>
+    
+
+<h2>KILL recommendations <span class="count">— 3 STABLE UNDERPERFORMERS, deprioritize</span></h2>
+
+    <div class='kill-card'>
+      <div class='kill-head'>
+        <div class='concept-id'>C418</div>
+        <span class='concept-badge badge-kill'>KILL</span>
+      </div>
+      <div class='kill-stats'>
+        avg D7 = <b>6.8</b> · std = <b>5.3</b> · 3 versions
+      </div>
+      <div class='kill-rationale'>C418 is a STABLE UNDERPERFORMER. Avg D7=6.8 after 3 versions with std=5.3 — reliably underperforming, low iteration upside, no outlier hope. Recommend: stop iteration. Reallocate the production budget to SCALE / ITERATE / EXPLORE briefs above.</div>
+      <div class='kill-savings'>~4 versions of motion-design capacity freed per cycle</div>
+    </div>
+    
+
+    <div class='kill-card'>
+      <div class='kill-head'>
+        <div class='concept-id'>C483</div>
+        <span class='concept-badge badge-kill'>KILL</span>
+      </div>
+      <div class='kill-stats'>
+        avg D7 = <b>14.8</b> · std = <b>12.0</b> · 5 versions
+      </div>
+      <div class='kill-rationale'>C483 is a STABLE UNDERPERFORMER. Avg D7=14.8 after 5 versions with std=12.0 — reliably underperforming, low iteration upside, no outlier hope. Recommend: stop iteration. Reallocate the production budget to SCALE / ITERATE / EXPLORE briefs above.</div>
+      <div class='kill-savings'>~8 versions of motion-design capacity freed per cycle</div>
+    </div>
+    
+
+    <div class='kill-card'>
+      <div class='kill-head'>
+        <div class='concept-id'>E33</div>
+        <span class='concept-badge badge-kill'>KILL</span>
+      </div>
+      <div class='kill-stats'>
+        avg D7 = <b>16.7</b> · std = <b>14.4</b> · 3 versions
+      </div>
+      <div class='kill-rationale'>E33 is a STABLE UNDERPERFORMER. Avg D7=16.7 after 3 versions with std=14.4 — reliably underperforming, low iteration upside, no outlier hope. Recommend: stop iteration. Reallocate the production budget to SCALE / ITERATE / EXPLORE briefs above.</div>
+      <div class='kill-savings'>~4 versions of motion-design capacity freed per cycle</div>
+    </div>
+    
+
+<div class="footer">
+  Brief Backlog v1 · Cycle 2026-05-05 · Source: <code>outputs_3/brief_backlog.json</code> · Generated by <code>build_brief_html.py</code>
+</div>
+
+</body>
+</html>
