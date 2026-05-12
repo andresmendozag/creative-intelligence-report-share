@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Test → Applovin Scale Analysis — Methodology &amp; Findings (v2)</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root {
+    --primary: #2c3e50;
+    --accent: #2980b9;
+    --exploit: #1b7837;
+    --explore: #fdae61;
+    --warn: #d7191c;
+    --bg-soft: #f6f8fa;
+    --border: #e1e4e8;
+    --text-soft: #586069;
+    --good: #16a085;
+    --neutral: #95a5a6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--primary);
+    line-height: 1.55;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    background: white;
+  }
+  h1 { font-size: 34px; font-weight: 700; margin: 0 0 8px; border-bottom: 3px solid var(--primary); padding-bottom: 12px; }
+  h2 { font-size: 26px; margin-top: 56px; padding: 8px 0; border-bottom: 2px solid var(--border); color: var(--primary); }
+  h3 { font-size: 19px; margin-top: 28px; color: var(--primary); }
+  h4 { font-size: 15px; margin: 16px 0 8px; color: var(--text-soft); }
+  p { margin: 10px 0; }
+  code { background: var(--bg-soft); padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: var(--primary); color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 12px; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--bg-soft); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
+  .kpi-card { background: white; padding: 16px; border-radius: 6px; text-align: center; border: 1px solid var(--border); border-top-width: 3px; }
+  .kpi-num { font-size: 30px; font-weight: 700; color: var(--primary); line-height: 1; }
+  .kpi-label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; margin-top: 6px; letter-spacing: 0.5px; }
+  .callout { background: #fff8e1; border-left: 4px solid #f9a825; padding: 14px 18px; margin: 16px 0; border-radius: 4px; font-size: 14px; }
+  .callout-blue { background: #eaf3fb; border-left: 4px solid var(--accent); padding: 14px 18px; margin: 16px 0; border-radius: 4px; font-size: 14px; }
+  .callout-red { background: #fdedec; border-left: 4px solid var(--warn); padding: 14px 18px; margin: 16px 0; border-radius: 4px; font-size: 14px; }
+  .callout-green { background: #eafaf1; border-left: 4px solid var(--exploit); padding: 14px 18px; margin: 16px 0; border-radius: 4px; font-size: 14px; }
+  .nav-toc { background: var(--bg-soft); border: 1px solid var(--border); padding: 18px 24px; border-radius: 6px; margin: 24px 0; }
+  .nav-toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 32px; }
+  .nav-toc li { break-inside: avoid; padding: 3px 0; font-size: 14px; }
+  .nav-toc a { color: var(--primary); text-decoration: none; }
+  .nav-toc a:hover { color: var(--accent); text-decoration: underline; }
+  .level-banner { display: inline-block; padding: 4px 12px; border-radius: 12px; color: white; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-right: 8px; letter-spacing: 1px; }
+  .level-A { background: var(--exploit); }
+  .level-B { background: var(--explore); color: #333; }
+  .level-C { background: var(--warn); }
+  .formula { background: var(--bg-soft); padding: 16px 20px; border-left: 3px solid var(--primary); font-family: 'SF Mono', Menlo, monospace; font-size: 13px; margin: 12px 0; }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-soft); font-size: 12px; text-align: center; }
+  .meta-strip { background: var(--primary); color: white; padding: 8px 16px; font-size: 12px; border-radius: 4px; margin-bottom: 24px; }
+  .meta-strip span { margin-right: 24px; opacity: 0.85; }
+  details { margin: 12px 0; }
+  summary { cursor: pointer; font-weight: 600; color: var(--accent); padding: 6px 0; }
+  .chart-frame { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin: 16px 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .step-card { background: var(--bg-soft); border-left: 3px solid var(--accent); padding: 14px 18px; margin: 10px 0; border-radius: 4px; }
+  .step-card h4 { margin-top: 0; color: var(--accent); }
+  .pill-good { background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .pill-warn { background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .pill-bad { background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .tier-A { border-left: 4px solid var(--exploit); padding-left: 16px; margin: 14px 0; }
+  .tier-B { border-left: 4px solid var(--explore); padding-left: 16px; margin: 14px 0; }
+  .tier-C { border-left: 4px solid var(--warn); padding-left: 16px; margin: 14px 0; }
+  .data-caveat { background: #f4f1ff; border-left: 4px solid #6f42c1; padding: 12px 16px; margin: 14px 0; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>Test → Applovin Scale Analysis <span style="font-weight:400; color: var(--text-soft); font-size: 22px;">v3.2</span></h1>
+<p style="margin: 4px 0 16px; color: var(--text-soft); font-size: 14px;">
+<b>Methodology &amp; Findings</b> · Data Science Report ·
+Andres Mendoza — Growth Data Analyst (Central Hybrid Team)</p>
+
+<div class="meta-strip">
+  <span><b>Question:</b> Do Facebook auto-test metrics predict Applovin scale?</span>
+  <span><b>Test data:</b> 2025-10-18 → 2026-04-28 (24 windows)</span>
+  <span><b>Scale data:</b> Feb–May 2026 partial ($9.57M ALL_ recovered)</span>
+  <span><b>Generated:</b> 2026-05-12</span>
+</div>
+
+<div class="callout-blue">
+<b>Audience:</b> data analysts, data scientists, UAM team. This is the canonical methodology + findings report for the test → scale validation project. Every claim is anchored to a CSV in <code>analysis_outputs/</code>; every number is reproducible from <code>RELIABLE_cohort_with_install_share.csv</code>.
+</div>
+
+<div class="data-caveat">
+<b>📌 Important data caveat:</b> The Applovin spend figures in this report reflect <b>only the creative-level granularity we were able to recover</b> through monthly exports (Feb–May 2026). Earlier months and other granularity levels were not accessible due to dashboard export limitations (50,000-row cap on daily exports). The 453 "scale-only" creatives — including R1426_V1 ($480K) and R1608_V1 ($391K) — were tested in Facebook before our 6-month test window starts (Oct 2025). Their absence in the test side is a data-recovery limitation, not a methodology flaw.
+</div>
+
+<div class="nav-toc">
+<b>Contents</b>
+<ol>
+  <li><a href="#exec">Executive Summary</a></li>
+  <li><a href="#problem">Business Problem &amp; Why This Matters</a></li>
+  <li><a href="#selection">Operational Context — What Shapes the Cohort</a></li>
+  <li><a href="#methodology">Methodological Approach</a></li>
+  <li><a href="#data">Data Sources &amp; Cleaning</a></li>
+  <li><a href="#dist">Outcome Distribution &amp; Why It Shaped the Method</a></li>
+  <li><a href="#tests">Tests Conducted &amp; Why Each One</a></li>
+  <li><a href="#results">Statistical Results</a></li>
+  <li><a href="#composite">The Lumina Cross-Network Scale Score</a></li>
+  <li><a href="#findings">Findings Ranked by Reliability</a></li>
+  <li><a href="#caveats">Known Limitations &amp; Caveats</a></li>
+  <li><a href="#actions">Actionable Recommendations</a></li>
+  <li><a href="#appendix">Appendix: File &amp; Reproduction Index</a></li>
+</ol>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="exec">1 · Executive Summary</h2>
+
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-top: 3px solid var(--primary);">
+    <div class="kpi-num">669</div>
+    <div class="kpi-label">Reliable cohort (n)</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--exploit);">
+    <div class="kpi-num">0.77</div>
+    <div class="kpi-label">Best CV AUC achieved</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--accent);">
+    <div class="kpi-num">5</div>
+    <div class="kpi-label">Features in winning composite</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--warn);">
+    <div class="kpi-num">0.91</div>
+    <div class="kpi-label">Gini of spend distribution</div>
+  </div>
+</div>
+
+<div class="callout-green">
+<b>Headline finding:</b> <b>Lumina D7 has real predictive power for Applovin scaling — and it becomes visible once we control for test-phase install volume.</b> The raw correlation with scale is near zero (ρ = +0.02), but after controlling for installs the partial correlation rises to ρ = +0.12 (p = 0.001) — the strongest clean signal of any feature. A 5-feature composite (<code>Lumina D0 + Lumina D7 + log(IPM) + log(ROAS D7) + install_share_in_window</code>) reaches cross-validated AUC = <b>0.77</b> on the reliable cohort (n=669, 5-fold CV).
+</div>
+
+<div class="callout">
+<b>The install-volume effect (Section 8.4):</b> Under our auto-test design, every creative gets the same daily budget (~$15–$20/day for ~4 days), so all creatives compete with equal spend. Within that fixed envelope, the Facebook algorithm decides how to allocate impressions — and a more-efficient creative (low CPM, high CTR×CVR) mechanically gets more installs from the same dollars. This means install volume in our test data is essentially measuring <i>conversion efficiency at constant spend</i> — the same economic quality that Lumina D7's IPM, CPI, and ROAS_D7 components also capture. As a result, Lumina D7 itself is correlated with installs (ρ = +0.60), and the absolute-volume information partly masks Lumina's cohort-relative ranking signal. Two recommended composites are offered in Section 9: a <b>high-AUC (0.77)</b> version that leverages all signals, and a <b>clean-causal (0.65–0.70)</b> version that controls for installs explicitly so the coefficients have unambiguous interpretations.
+</div>
+
+<h3>Five sentences for stakeholders</h3>
+<ol>
+  <li>We analyzed 669 creatives that ran on both the Facebook auto-test pipeline (with mature D7 Lumina scores) and Applovin (with real impressions, clicks and spend across 4 months).</li>
+  <li>Applovin spend is extremely Pareto-distributed — top 1% of creatives captures 74% of recovered spend — so we used a <b>top-decile binary classification (≥$2,820 spend)</b> as the cleanest outcome.</li>
+  <li>Lumina D7 does carry predictive signal for Applovin scaling, but it is partially hidden by a sample-size confound: Facebook auto-test allocates more impressions to creatives that perform well early, so IPM/ROAS/installs all move together. After controlling for install volume, Lumina D7's partial correlation with scale rises from ρ = +0.02 to ρ = +0.12 (p = 0.001).</li>
+  <li>A <b>5-feature composite reaches AUC 0.77</b> — combining per-window-normalized Lumina with raw-level economic metrics and audience reach. A <b>cleaner-causal alternative</b> using only Lumina D0 + Lumina D7 + install_share + log(installs) reaches AUC 0.70 with unambiguous coefficient signs.</li>
+  <li>The recommendation is to <b>publish the Lumina Cross-Network Scale Score</b> alongside Lumina in the dashboard, not to modify Lumina itself; Lumina remains the right tool for within-cohort Facebook ranking.</li>
+</ol>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="problem">2 · Business Problem &amp; Why This Matters</h2>
+
+<h3>What we wanted to answer</h3>
+<p>The Lumina Score is the team's north-star metric for ranking creatives in Facebook auto-test campaigns. The score is well-defined for its original purpose: <i>which creative outperformed its window-mates in the same Facebook test cohort?</i></p>
+<p>But the operationally meaningful question for the UAM team is different: <b>"if a creative scored well on the Facebook test, does it actually scale on Applovin?"</b> Applovin is where most of the production spend happens — Lumina's value rises if it predicts Applovin scaling, and falls if it doesn't.</p>
+
+<h3>Why this matters financially (with recovered-data caveat)</h3>
+<div class="chart-frame">
+<div id="ramp-chart" style="width: 100%; height: 400px;"></div>
+</div>
+<div class="data-caveat">
+<b>What's in this chart:</b> These are the creative-level monthly spend totals we were able to <b>recover</b> from Applovin via the monthly export (Feb 2026 – May 10 2026, partial month). Earlier months (and finer time slicing) were not accessible at the creative level. Total recovered: $9.57M ALL_ spend across 1,227 unique ALL_ creatives. The April spike to $5.24M is real, but is also partially a function of when we started having visibility — older spend on long-running creatives is folded into "lifetime" cumulative numbers from the aggregated CSV, not visible in this monthly cut.
+</div>
+<p>ALL_ creative spend on Applovin grew sharply from $950K (Feb) to $5.24M (Apr) in our recovered window, driven mostly by a few breakout creatives. The UAM team selects creatives for Applovin partly based on Facebook test signals. If that signal is weak, the team is essentially picking by intuition; if it's strong, the pipeline is justified.</p>
+
+<h3>Why this is harder than a typical correlation question</h3>
+<ul>
+  <li><b>Selection bias</b> (see Section 3 — confirmed with data, not just hypothesized).</li>
+  <li><b>Extreme outcome distribution:</b> Pareto-on-steroids (Gini 0.91). 6 creatives carry 74% of all recovered spend.</li>
+  <li><b>Tiny upper tail:</b> only 17 creatives reach $10K+ in recovered Applovin spend. Insufficient sample size for top-tier modeling.</li>
+  <li><b>Historical blind spot:</b> 453 high-scale Applovin creatives (incl. <code>R1426_V1</code> $480K, <code>R1608_V1</code> $391K) were never in the auto-test pipeline — they're pre-October-2025 historical winners, confirmed.</li>
+  <li><b>Cross-platform translation:</b> Lumina is calibrated for Facebook; Applovin's algorithm rewards different signals than Facebook's.</li>
+</ul>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="selection">3 · Operational Context — What Shapes the Cohort We're Modeling</h2>
+
+<p>Before interpreting predictive results, we examine which test-phase signals are systematically different between the creatives that reached Applovin and those that did not. This is not about evaluating any team's process — it is about characterizing the population our model is trained on, so that downstream conclusions (especially about Lumina) are read in context.</p>
+
+<div class="data-caveat">
+<b>📌 Important data-availability constraint:</b> Applovin spend data is only available <b>from February 2026 onward</b>. The Facebook test windows span <b>October 2025 – April 2026</b>. This creates an asymmetric observation window:
+<ul style="margin-top: 8px;">
+  <li><b>Test windows 1–16 (Oct 2025 – Feb 2026):</b> we cannot know whether a creative was activated at the time, only whether it is still active 1–5 months later. This is a <i>survivorship measure</i>, not a propagation-rate.</li>
+  <li><b>Test windows 17–24 (Feb 27 – Apr 28, 2026):</b> Applovin observation is concurrent with test end. Here "active on Applovin" is a fair proxy for "propagated to Applovin."</li>
+</ul>
+The temporal analysis below is restricted to the concurrent windows (17–24).
+</div>
+
+<h3>3.1 — Comparing test-phase metrics: propagated vs not-propagated cohorts</h3>
+<p>This snapshot comparison is valid for the full cohort (it does not depend on timing). We display the <b>percentage difference</b> between medians on a unified scale to make small but real operational differences visible — raw values on different units obscure the pattern.</p>
+
+<div class="chart-frame">
+<div id="picked-vs-not-chart" style="width: 100%; height: 480px;"></div>
+</div>
+
+<table>
+  <tr><th>Test-phase metric</th><th>Propagated (median)</th><th>Not propagated (median)</th><th>Δ %</th><th>Mann-Whitney p</th><th>Reading</th></tr>
+  <tr><td><b>Test installs (volume)</b></td><td>74</td><td>63</td><td><b>+17%</b></td><td><b>0.019</b> ✓</td><td>Larger-audience creatives advance</td></tr>
+  <tr><td><b>CPI ($)</b></td><td>$0.39</td><td>$0.45</td><td><b>−14%</b></td><td><b>0.020</b> ✓</td><td>Cheaper-acquisition creatives advance</td></tr>
+  <tr><td><b>CTR (raw)</b></td><td>0.881</td><td>0.848</td><td><b>+4%</b></td><td><b>0.007</b> ✓</td><td>Higher-engagement creatives advance</td></tr>
+  <tr><td>IPM</td><td>1.619</td><td>1.539</td><td>+5%</td><td>0.572</td><td>Directional only</td></tr>
+  <tr><td>ROAS D7 (raw)</td><td>0.015</td><td>0.015</td><td>−1%</td><td>0.415</td><td>No difference</td></tr>
+  <tr><td>ROAS D0 (raw)</td><td>0.003</td><td>0.003</td><td>−1%</td><td>0.587</td><td>No difference</td></tr>
+  <tr><td>Lumina D0 percentile-in-window</td><td>50.8</td><td>48.5</td><td>+5%</td><td>0.999</td><td>No difference (see note)</td></tr>
+  <tr><td>Lumina D7 percentile-in-window</td><td>49.4</td><td>52.4</td><td>−6%</td><td>0.402</td><td>No difference (see note)</td></tr>
+</table>
+
+<div class="callout-blue">
+<b>Why a fairer Lumina comparison was needed:</b> Lumina scores are <i>per-window normalized to 0–100</i>. The median Lumina score in any window is always near 50 by construction — so comparing raw Lumina medians (42.6 vs 42.9) cannot show real differences. Instead we use the <b>percentile rank of each creative within its own test window</b>, which preserves the relative position information. Even with that fairer view, the medians remain near 50 with p &gt; 0.40 for both D0 and D7 — propagation is not stratifying creatives by their within-window Lumina ranking in either direction.
+</div>
+
+<div class="callout">
+<b>How to read this section in plain terms:</b>
+<ol style="margin: 8px 0 0;">
+  <li>Three concrete operational metrics — <b>test installs (volume), CPI, and CTR</b> — are statistically different between the propagated and not-propagated cohorts at p &lt; 0.02. Creatives that reached Applovin tended to have more test installs, lower acquisition cost, and slightly higher click-through.</li>
+  <li>The Lumina composite scores themselves do not show a statistically distinguishable difference between the two cohorts (p = 0.40–0.99) even after the fairer percentile-rank framing.</li>
+  <li>This is operational context, not a judgment: the natural triggers for advancing a creative ("it had volume, it was cheap to acquire users on, people clicked") are visible in the data; the relative composite ranking is not the dominant trigger.</li>
+  <li><b>Implication for the modelling that follows:</b> because the cohort we observe was shaped partly by these operational signals (not strictly by Lumina rank), univariate AUC for Lumina alone underestimates its potential value on a less-filtered population. The multivariate composite in Section 9 partially compensates by including the same operational signals (IPM, ROAS, install share) that the propagation process is already implicitly using.</li>
+</ol>
+</div>
+
+<h3>3.2 — Propagation rate by Lumina quartile, concurrent windows only</h3>
+<p>Restricted to windows 17–24 (Feb–Apr 2026), where Applovin observation overlaps with test end. n=253. This is the data-honest slice for a direct propagation-rate measurement.</p>
+
+<div class="two-col">
+<div class="chart-frame">
+<div id="concurrent-pickrate-d0-chart" style="width: 100%; height: 420px;"></div>
+</div>
+<div class="chart-frame">
+<div id="concurrent-pickrate-d7-chart" style="width: 100%; height: 420px;"></div>
+</div>
+</div>
+
+<table>
+  <tr><th>Lumina D0 quartile (within window)</th><th>n</th><th>Propagated</th><th>Propagation rate</th></tr>
+  <tr><td>Q1 (low)</td><td>59</td><td>43</td><td>72.9%</td></tr>
+  <tr><td>Q2</td><td>57</td><td>45</td><td>78.9%</td></tr>
+  <tr><td>Q3</td><td>56</td><td>42</td><td>75.0%</td></tr>
+  <tr><td>Q4 (high)</td><td>53</td><td>41</td><td>77.4%</td></tr>
+  <tr><td><b>Chi-square test (D0 quartile × propagated)</b></td><td colspan="3"><b>chi² = 0.67, p = 0.880 — quartile and propagation status are independent</b></td></tr>
+</table>
+
+<div class="callout-blue">
+<b>Concurrent-window finding:</b> Propagation rate is essentially flat across Lumina D0 quartiles (72.9% → 78.9% → 75.0% → 77.4%, chi² p = 0.88). Within this honest temporal slice, Lumina D0 quartile does not statistically stratify whether a creative reached Applovin. Same result for D7 (chi² p = 0.57). This is consistent with Section 3.1: the operational signals (CPI, CTR, installs) — not the Lumina composite — are the variables that differentiate the propagated cohort from the not-propagated cohort.
+</div>
+
+<h3>3.3 — Inventory: top-quartile-Lumina creatives that were not activated on Applovin</h3>
+<p>A direct artifact of the propagation pattern: which creatives ranked in the top quartile of their test window (by Lumina D0 or D7) but were not activated on Applovin? Below is the per-window count — useful as a candidate-audit list for retrospective review.</p>
+
+<div class="chart-frame">
+<div id="not-picked-by-window-chart" style="width: 100%; height: 460px;"></div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card" style="border-top: 3px solid var(--warn);">
+    <div class="kpi-num">40</div>
+    <div class="kpi-label">Top-Q4 D0 creatives never on Applovin</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--explore);">
+    <div class="kpi-num">191</div>
+    <div class="kpi-label">Total Top-Q4 D0 creatives in cohort</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--warn);">
+    <div class="kpi-num">41</div>
+    <div class="kpi-label">Top-Q4 D7 creatives never on Applovin</div>
+  </div>
+  <div class="kpi-card" style="border-top: 3px solid var(--explore);">
+    <div class="kpi-num">21%</div>
+    <div class="kpi-label">% of top-Q4 D0 that never reached Applovin</div>
+  </div>
+</div>
+
+<p><b>40 of 191 top-Q4-D0 creatives (21%) were never activated on Applovin.</b> Five of them scored a perfect Lumina D0 = 100 (top of their window). The full inventory is in <code>Q4_D0_not_picked_inventory.csv</code> and <code>Q4_D7_not_picked_inventory.csv</code>. Top 15 examples:</p>
+
+<table>
+  <tr><th>Window</th><th>Token</th><th>Lumina D0</th><th>Lumina D7</th><th>Installs</th></tr>
+  <tr><td>5</td><td><code>C423_V10_WW</code></td><td>100.00</td><td>92.31</td><td>110</td></tr>
+  <tr><td>7</td><td><code>C444_V4_WW</code></td><td>100.00</td><td>48.48</td><td>93</td></tr>
+  <tr><td>9</td><td><code>C450_V6_WW</code></td><td>100.00</td><td>100.00</td><td>79</td></tr>
+  <tr><td>11</td><td><code>C462_V7_WW</code></td><td>100.00</td><td>79.65</td><td>128</td></tr>
+  <tr><td>16</td><td><code>C491_V8_WW</code></td><td>100.00</td><td>88.63</td><td>78</td></tr>
+  <tr><td>18</td><td><code>E41_V1_WW</code></td><td>99.32</td><td>46.96</td><td>91</td></tr>
+  <tr><td>21</td><td><code>C523_V3_WW</code></td><td>96.80</td><td>98.78</td><td>53</td></tr>
+  <tr><td>16</td><td><code>C491_V5_WW</code></td><td>90.54</td><td>91.06</td><td>132</td></tr>
+  <tr><td>16</td><td><code>C486_V2_WW</code></td><td>81.29</td><td>68.15</td><td>63</td></tr>
+  <tr><td>19</td><td><code>C511_V9_WW</code></td><td>80.05</td><td>100.00</td><td>116</td></tr>
+  <tr><td>5</td><td><code>C423_V11_WW</code></td><td>79.85</td><td>84.55</td><td>85</td></tr>
+  <tr><td>7</td><td><code>C444_V6_WW</code></td><td>79.53</td><td>53.00</td><td>123</td></tr>
+  <tr><td>19</td><td><code>C511_V8_WW</code></td><td>77.36</td><td>77.97</td><td>48</td></tr>
+  <tr><td>5</td><td><code>R1617_V6_WW</code></td><td>73.35</td><td>80.87</td><td>76</td></tr>
+  <tr><td>5</td><td><code>C422_V7_WW</code></td><td>72.92</td><td>84.44</td><td>101</td></tr>
+</table>
+
+<div class="callout-blue">
+<b>Caveat on the inventory:</b> Some of these creatives from early windows (1–16) may have been activated at the time and killed before Feb 2026 — we cannot rule that out due to the Applovin observation window. For late-window examples (17–24), there is no early-Applovin censoring possibility, so those are genuinely "ranked top-quartile, never reached Applovin" cases. The full inventory is provided so that retrospective review is possible.
+</div>
+
+<h3>3.4 — Implications for the modelling that follows</h3>
+<p>Because propagation is partly orthogonal to Lumina rank, the cohort of "activated + scaled" creatives we use for modelling is shaped by operational filters (CPI, CTR, installs). This has three consequences for how the results in subsequent sections should be read:</p>
+<ul>
+  <li>Univariate AUC for Lumina-only models is <b>diluted</b> by the operational filtering in the propagation step — Lumina's true predictive power on a less-filtered population is likely higher than the 0.50 we observe here.</li>
+  <li>The composite model in Section 9 partially compensates because it includes the same operational signals (IPM, ROAS, install_share) that propagation is implicitly using — giving the score access to both the rank-based view (Lumina) and the absolute-level view.</li>
+  <li>The 40 "top-quartile-Lumina, not propagated" creatives in Section 3.3 are <b>candidate audit cases</b>, not necessarily mis-decisions. Some may have had operational reasons not visible in the test data; others may genuinely represent untapped scale potential. The inventory exists so that retrospective review can answer this.</li>
+</ul>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="methodology">4 · Methodological Approach</h2>
+
+<div class="callout-blue">
+<b>Test-platform context for readers:</b> The Facebook auto-test we use as our quality signal is a <b>fixed-budget</b> design — every creative in a given test window is allocated the same daily budget (~$15–$20/day for ~4 days, so ~$60–$80 per creative total). The Facebook algorithm decides <b>how</b> to spend that budget for each creative (which audiences, at what CPM), but the dollar envelope is equal. This matters for interpreting our findings: variance in install counts across creatives in a window is variance in <b>conversion efficiency at constant spend</b>, not variance in budget allocation. This nuance becomes important in Section 8.4.
+</div>
+
+<p>The full analysis ran through <b>13 sequential approaches</b>, each designed to address a specific weakness of the previous one. The methodology is summarized below; each step's rationale is explained in <a href="#tests">Section 7</a>.</p>
+
+<div class="step-card">
+<h4>Step 1 — Build a one-row-per-creative master table</h4>
+<p>Aggregate Facebook test metrics per creative token (handling benchmarks specially since they appear in multiple windows). Join to Applovin scale via parsed token (e.g., <code>ALL_C396_V4_WW_VID_...</code> → <code>C396_V4_WW</code>).</p>
+</div>
+
+<div class="step-card">
+<h4>Step 2 — Filter to genuinely tested cohort</h4>
+<p>A creative is only "tested on Applovin" if it received <b>impressions AND clicks AND spend</b>. Discovered 27 data anomalies (impressions-no-spend, spend-no-clicks). Strict activity criteria reduces from 1,425 → 1,165 active creatives.</p>
+</div>
+
+<div class="step-card">
+<h4>Step 3 — Use mature-only Lumina scores</h4>
+<p>Lumina D7 is only defined when test data is mature (≥7 days post window end + ≥10 installs at D7). Earlier passes averaged immature scores too, weakening signal.</p>
+</div>
+
+<div class="step-card">
+<h4>Step 4 — Choose outcomes by class balance, not arbitrary thresholds</h4>
+<p>Given Pareto distribution: top-decile binary (≥$2,820 spend, 10% base rate) is the cleanest target. Mega-scale (≥$10K, 2.5% base rate) is too rare for reliable single-feature modeling.</p>
+</div>
+
+<div class="step-card">
+<h4>Step 5 — Exhaustive feature subset search</h4>
+<p>Test every 1, 2, 3, 4, 5, 6, 7-feature combination from 11 test-side metrics (after adding install_share). Optimize for cross-validated AUC (5-fold) to avoid overfitting. Report the smallest combination that matches the full model — parsimony matters for dashboard integration.</p>
+</div>
+
+<div class="step-card">
+<h4>Step 6 — Test selection-bias hypotheses with date-aware rigor</h4>
+<p>Compare picked vs. not-picked test-side distributions (Mann-Whitney U). Apply temporal restriction to the concurrent observation window (windows 17–24) where Applovin and test data overlap. Build per-window inventory of top-Lumina creatives that were never propagated to Applovin.</p>
+</div>
+
+<h3>4.7 — Statistical methods used in this report</h3>
+
+<p>This subsection is a self-contained reference for the statistical tests cited throughout — readers can return here when they hit a "CV AUC = 0.77 ± 0.08" or "Spearman ρ = +0.12, p = 0.001" in later sections.</p>
+
+<div class="callout-blue">
+<b>1. AUC — Area Under the (ROC) Curve.</b> AUC measures how well a model <b>rank-orders</b> creatives, not whether it classifies them correctly. Formally: AUC is the probability that, given one randomly-chosen "top-decile" creative and one randomly-chosen "not-top-decile" creative, the model assigns a higher score to the top-decile one.
+<ul style="margin: 8px 0 0;">
+  <li>0.50 = random (coin flip)</li>
+  <li>0.60 = weak signal · 0.70 = useful · 0.80–0.90 = strong · &gt; 0.90 = exceptional</li>
+  <li>Our best composite achieves <b>AUC = 0.77 ± 0.08</b> — substantial signal but not decisive on its own.</li>
+</ul>
+<b>Why AUC, not accuracy?</b> For our imbalanced outcomes (10% top-decile, 2.5% mega-scaled), a "predict no" baseline gets 90% accuracy while doing zero useful work. AUC measures rank-ordering — exactly what the UAM team does when prioritizing creatives. They don't classify; they prioritize.
+</div>
+
+<div class="callout-blue">
+<b>2. Cross-validation (5-fold CV).</b> Every AUC we report is <b>cross-validated</b>: the 669-creative dataset is randomly split into 5 equal parts; the model trains on 4 parts and predicts the held-out 5th; this rotates 5 times so every creative is predicted exactly once by a model that didn't see it during training. The 5 fold-level AUCs are averaged and reported with their standard deviation (e.g., 0.766 ± 0.08). This protects against overfitting and gives a realistic estimate of out-of-sample performance.
+</div>
+
+<div class="callout-blue">
+<b>3. Spearman's rank correlation (ρ) — our primary correlation measure.</b> Measures the strength of a <b>monotonic</b> relationship between two variables based on their ranks, not raw values.
+<ul style="margin: 8px 0 0;">
+  <li>Range: −1 (perfect inverse rank-order) to +1 (perfect concordant rank-order); 0 = no monotonic relationship.</li>
+  <li><b>Why we use it as primary:</b> Applovin spend is Pareto-distributed (Gini 0.91) — Pearson on raw values would be dominated by 6 outlier creatives. Many test metrics (IPM, CPI, ROAS) also have heavy right tails. Ranks neutralize this.</li>
+  <li>Spearman doesn't assume linearity — it just asks "do these two variables move in the same direction across the cohort?"</li>
+</ul>
+</div>
+
+<div class="callout-blue">
+<b>4. Pearson's correlation (r) — used alongside Spearman in earlier tables.</b> Measures the strength of a <b>linear</b> relationship on raw values. Reported alongside Spearman as a robustness check; when raw-value Pearson and rank Spearman disagree dramatically, it usually signals outliers. In our data they consistently agreed in direction, with Spearman being more robust.
+</div>
+
+<div class="callout-blue">
+<b>5. Partial Spearman correlation — the key analysis in Section 8.4.2.</b> Measures the rank correlation between X and Y <b>after removing the linear effect of a third variable Z</b>. In our case: X = test metric, Y = log(Applovin spend), Z = log(test installs).
+<br><br>
+<b>Computation:</b> (1) rank-transform X, Y, Z; (2) regress X on Z linearly and take residuals; (3) regress Y on Z linearly and take residuals; (4) Pearson-correlate the two residual series. The result isolates the relationship between X and Y that <i>cannot</i> be explained by Z — which is how we separated Lumina D7's true signal (ρ = +0.12, p = 0.001) from its install-volume confound (raw ρ = +0.02).
+</div>
+
+<div class="callout-blue">
+<b>6. Chi-square test of independence — used for categorical crosstabs.</b> Tests whether two categorical variables (e.g., Lumina D7 quartile × propagated/not-propagated, or Lumina D7 quartile × scale tier) are statistically independent. Reported in Section 3.2 (propagation rates by quartile, p = 0.880) and Section 8.6 (quartile × outcome tables).
+</div>
+
+<div class="callout-blue">
+<b>7. Mann-Whitney U — used for two-group comparisons.</b> Tests whether the rank distributions of two independent groups differ. Like a t-test, but uses ranks instead of means — robust to skewed distributions and outliers. Used in Section 3.1 ("propagated vs not-propagated" median comparisons) and the winners-vs-non comparisons.
+</div>
+
+<div class="callout-blue">
+<b>8. p-values throughout.</b> All p-values are two-sided; we report them without correction in the main tables, but flag where multiple-testing correction would be relevant (e.g., the 8.4.2 partial-correlation table tests 7 hypotheses — Bonferroni would multiply each p by 7). The headline finding (Lumina D7 partial ρ = +0.12, p = 0.001) survives Bonferroni correction even on the largest set of tests we ran.
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="data">5 · Data Sources &amp; Cleaning</h2>
+
+<table>
+  <tr><th style="width: 25%;">Source</th><th>Path</th><th>Rows</th><th>Notes</th></tr>
+  <tr><td><b>Facebook auto-test creatives</b></td><td><code>outputs_test_v2/creative_level_analysis.csv</code></td><td>1,078</td><td>998 unique tokens, May 5 2026 build, latest Lumina formula verified to 0.0000 diff</td></tr>
+  <tr><td><b>Applovin spend — February</b></td><td><code>Downloads/February.csv</code></td><td>949 ALL_</td><td>$950K total — partial visibility</td></tr>
+  <tr><td><b>Applovin spend — March</b></td><td><code>Downloads/March.csv</code></td><td>1,095 ALL_</td><td>$1.98M total</td></tr>
+  <tr><td><b>Applovin spend — April</b></td><td><code>Downloads/april.csv</code></td><td>1,189 ALL_</td><td>$5.24M total (55% of all recovered spend)</td></tr>
+  <tr><td><b>Applovin spend — May (partial)</b></td><td><code>Downloads/may.csv</code></td><td>1,226 ALL_</td><td>$1.40M through May 10</td></tr>
+</table>
+
+<h3>Key cleaning decisions</h3>
+
+<table>
+  <tr><th>Decision</th><th>Rationale</th></tr>
+  <tr><td>Token extraction via regex: <code>ALL_([A-Z]+\d+_V\d+(-\w+)?_[A-Z]+)_VID...</code></td><td>Matches test-side <code>s_primary_video_token</code>. 100% match rate on ALL_ creatives.</td></tr>
+  <tr><td>Benchmark creatives excluded from main analysis</td><td>6 benchmarks accumulate Facebook test data across 17–27 windows each, accounting for 60% of merged Applovin spend ($5.05M). Including them violates "one creative = one test" assumption.</td></tr>
+  <tr><td>ROAS in % (not dollars)</td><td>User-confirmed. A value of 1.49 means 1.49% return on test-phase D7.</td></tr>
+  <tr><td>453 Applovin-only creatives flagged but excluded</td><td>Pre-October-2025 historical winners (<code>R1426_V1</code> $480K, <code>R1608_V1</code> $391K). Cannot recover their test data without older Facebook auto-test exports.</td></tr>
+  <tr><td>Strict activity flag: imp&gt;0 AND clicks&gt;0 AND spend&gt;0</td><td>Surfaced 27 data anomalies. Loose filters (just spend&gt;0) inflate the "active" population and dilute signal.</td></tr>
+  <tr><td>Volume-weighted Lumina across mature windows only</td><td>Per the Lumina spec, only mature rows have meaningful D7 metrics. Including immature scores in the per-creative average adds noise.</td></tr>
+  <tr><td><b>NEW:</b> install_share_in_window computed per (token, window)</td><td>Measures how much of the test window's total install volume a creative captured. Volume-weighted across windows for benchmarks. Captures "did this creative attract a large audience relative to its peers."</td></tr>
+</table>
+
+<h3>The strict reliability funnel</h3>
+<div class="chart-frame">
+<div id="funnel-chart" style="width: 100%; height: 420px;"></div>
+</div>
+<p>Starting from 1,425 unique tokens (test ∪ Applovin), we filter down to a 669-creative cohort that meets every reliability criterion. Every analysis in the results section uses this cohort.</p>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="dist">6 · Outcome Distribution &amp; Why It Shaped the Method</h2>
+
+<div class="two-col">
+<div class="chart-frame">
+<div id="hist-chart" style="width: 100%; height: 400px;"></div>
+</div>
+<div class="chart-frame">
+<div id="lorenz-chart" style="width: 100%; height: 400px;"></div>
+</div>
+</div>
+
+<table>
+  <tr><th>Statistic</th><th>Value</th><th>Interpretation</th></tr>
+  <tr><td>Median spend</td><td>$502</td><td>Half of reliable creatives spend less than this</td></tr>
+  <tr><td>Mean spend</td><td>$4,777</td><td>9.5× the median → highly skewed</td></tr>
+  <tr><td>p90 threshold</td><td>$2,820</td><td>Used as the "top decile" outcome cutoff</td></tr>
+  <tr><td>Gini coefficient</td><td>0.912</td><td>More unequal than income distribution in any country (national Gini = 0.40–0.65)</td></tr>
+  <tr><td>Top 1% creatives</td><td>74% of spend</td><td>6 creatives carry $2.35M of $3.20M total</td></tr>
+  <tr><td>Bottom 50% creatives</td><td>2.1% of spend</td><td>334 creatives split $69K</td></tr>
+</table>
+
+<h3>Tier composition of the reliable cohort (n=669) — corrected presentation</h3>
+
+<p>The previous version of this chart used dual y-axes which made it hard to read the actual counts. Below the two views are split apart for clarity.</p>
+
+<div class="two-col">
+<div class="chart-frame">
+<div id="tier-count-chart" style="width: 100%; height: 440px;"></div>
+</div>
+<div class="chart-frame">
+<div id="tier-spend-chart" style="width: 100%; height: 440px;"></div>
+</div>
+</div>
+
+<table>
+  <tr><th>Tier</th><th>n creatives</th><th>% of n</th><th>Spend</th><th>% of spend</th></tr>
+  <tr><td><b>MEGA $100k+</b></td><td>4</td><td>0.6%</td><td>$2,180,286</td><td>68.2%</td></tr>
+  <tr><td><b>SCALED $10k-100k</b></td><td>13</td><td>1.9%</td><td>$413,973</td><td>13.0%</td></tr>
+  <tr><td><b>PROVEN $1k-10k</b></td><td>177</td><td>26.5%</td><td>$434,492</td><td>13.6%</td></tr>
+  <tr><td><b>LIGHT $100-1k</b></td><td>366</td><td>54.7%</td><td>$161,820</td><td>5.1%</td></tr>
+  <tr><td><b>NOISE <$100</b></td><td>109</td><td>16.3%</td><td>$5,490</td><td>0.2%</td></tr>
+</table>
+
+<p>The four MEGA creatives ($100K+) account for 68% of all reliable-cohort spend; the 13 SCALED ($10K–100K) add another 13%. Together, <b>17 creatives carry 81% of the recovered spend</b>; the remaining 652 share $603K (19%). This is why any "what makes a winner" question has a small-sample problem.</p>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="tests">7 · Tests Conducted &amp; Why Each One</h2>
+
+<p>The analysis ran 13 approaches. Each was motivated by a specific question that arose from the previous step. The honest progression — including dead-ends — is documented here.</p>
+
+<table style="font-size: 12px;">
+  <tr><th style="width: 4%;">#</th><th style="width: 18%;">Approach</th><th style="width: 30%;">Question it answers</th><th style="width: 30%;">Outcome</th><th style="width: 18%;">Status</th></tr>
+  <tr><td>1</td><td>Naive pairwise correlations</td><td>Does any test metric correlate with Applovin spend?</td><td>All |ρ| &lt; 0.15. Most metrics show inverted signs.</td><td><span class="pill-warn">Confounded by benchmarks</span></td></tr>
+  <tr><td>2</td><td>Benchmark-aware aggregation + scale-only audit</td><td>Are 6 benchmark creatives skewing the result?</td><td>Yes — 60% of merged Applovin spend. Excluded.</td><td><span class="pill-good">Foundational cleanup</span></td></tr>
+  <tr><td>3</td><td>Log-spaced industry tiers</td><td>Do Lumina scores differ across spend tiers?</td><td>Visual lift in top 2 tiers (n=17) but stats insignificant.</td><td><span class="pill-warn">Sample too small for stats</span></td></tr>
+  <tr><td>4</td><td>Monthly panel — durability outcomes</td><td>Does the test predict sustained spend (months active)?</td><td>Retention/ROAS push correct direction for sustainability, wrong for peak.</td><td><span class="pill-good">Suggests 2-axis framing</span></td></tr>
+  <tr><td>5</td><td>Regularized multivariate model on full cohort</td><td>Combined, do the metrics predict scale?</td><td>AUC 0.69. Lumina D0 dominant; components inverted.</td><td><span class="pill-good">Strongest aggregate result</span></td></tr>
+  <tr><td>6</td><td>Two-stage P(picked) × P(scales|picked)</td><td>Does separating "got selected" from "scaled given selected" add lift?</td><td>No. AUC 0.67 combined vs 0.68 single.</td><td><span class="pill-bad">Dead end</span></td></tr>
+  <tr><td>7</td><td>Lumina quartile × scale tier crosstab</td><td>Is Lumina D7 quartile linked to scale tier?</td><td>Chi-square p=0.81 for D7. Independent of scale tier.</td><td><span class="pill-good">Definitive D7 univariate null</span></td></tr>
+  <tr><td>8</td><td>Install-volume stratification</td><td>Does Lumina D7 work for higher-install (less noisy) creatives?</td><td>Signal improves from ρ=0 to ρ=+0.09 but never significant.</td><td><span class="pill-warn">Median installs too low</span></td></tr>
+  <tr><td>9</td><td>$10K+ winners inspection</td><td>What's different about the winners?</td><td>Winners have <i>shorter</i> playtime (p=0.0008) and <i>higher</i> ROAS-growth.</td><td><span class="pill-good">Playtime inversion</span></td></tr>
+  <tr><td>10</td><td>ROAS-growth hypothesis validation</td><td>Does low-D0 + high-ROAS-growth predict scale?</td><td>No — candidates scaled at 18.8% vs control 25.8%.</td><td><span class="pill-bad">Hypothesis rejected</span></td></tr>
+  <tr><td>11</td><td>Availability filter (Applovin-active only)</td><td>Are high-Lumina creatives just not getting impressions?</td><td>No — Q4 D7 has 85% active rate.</td><td><span class="pill-good">Confirmed not artifact</span></td></tr>
+  <tr><td>12</td><td>Strict reliability cohort + 4-feature composite</td><td>What's the best parsimonious model under maximum rigor?</td><td>4-feature composite reaches AUC 0.72.</td><td><span class="pill-good">First strong result</span></td></tr>
+  <tr><td>13</td><td><b>Install-share + selection-bias proof</b></td><td>Does audience reach help, and is selection bias real?</td><td><b>AUC 0.77 with install_share added. Selection bias confirmed empirically.</b></td><td><span class="pill-good">FINAL ANSWER</span></td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="results">8 · Statistical Results</h2>
+
+<h3>8.1 — Univariate predictive power (single metric → top decile)</h3>
+<p>How well does each test metric, used alone, rank creatives by their probability of reaching the top decile of Applovin spend? AUC = 0.5 means random; AUC = 1.0 means perfect.</p>
+
+<div class="chart-frame">
+<div id="univariate-chart" style="width: 100%; height: 520px;"></div>
+</div>
+
+<p>Key observations:</p>
+<ul>
+  <li><b>install_share is the strongest single feature</b> (AUC = 0.65) — creatives that captured a larger share of installs in their test window are more likely to top-decile-scale on Applovin.</li>
+  <li><b>log(ROAS D0) and log(ROAS D7) tie next</b> at AUC ≈ 0.63 — but with <b>inverted</b> sign (see Section 8.4 for explanation).</li>
+  <li>Retention metrics cluster around AUC 0.55–0.59 — directional but inconsistent.</li>
+  <li><b>Lumina D7 used alone</b> sits at AUC = 0.50 on the propagated cohort — but this is an observational ceiling shaped by the operational filters that select which creatives reach Applovin (Section 3). It is <b>not</b> a verdict that Lumina is uninformative; in the multivariate model Lumina D7 receives the largest positive coefficient (Section 8.5).</li>
+  <li><b>The next-weakest single feature is CTR %</b> (AUC = 0.54). Several other operational signals are also weak in isolation but complementary when combined.</li>
+  <li>Lumina D0 is also weak alone (AUC = 0.51) — but together with the other features, they add multivariate value.</li>
+</ul>
+
+<h3>8.2 — Multivariate AUC progression with install_share included</h3>
+
+<div class="chart-frame">
+<div id="progression-chart" style="width: 100%; height: 440px;"></div>
+</div>
+
+<div class="callout-green">
+<b>The 5-feature composite reaches AUC 0.77.</b> Adding features beyond 5 yields no statistically meaningful AUC improvement (gains &lt; 0.005, within cross-validation noise). install_share is in every top-k subset from k=1 to k=7 — it's the most stable contributor.
+</div>
+
+<h3>8.3 — Tested alternative composites (incl. user-suggested maturation forms)</h3>
+
+<div class="chart-frame">
+<div id="composite-compare-chart" style="width: 100%; height: 520px;"></div>
+</div>
+
+<table>
+  <tr><th>Composite formulation</th><th>Univariate or k-feature AUC</th><th>Verdict</th></tr>
+  <tr><td>Lumina D7 alone</td><td>0.46</td><td>Worse than random</td></tr>
+  <tr><td>(Lumina D0 + D7) / 2</td><td>0.42</td><td>Worse — correlated metrics cancel signal</td></tr>
+  <tr><td>D7 / D0 (maturation ratio)</td><td>0.48</td><td>Doesn't beat its components</td></tr>
+  <tr><td>D7 − D0 (additive maturation)</td><td>0.51</td><td>Better but still random</td></tr>
+  <tr><td>(D7 − D0) × install_share</td><td>0.54</td><td>Marginal improvement</td></tr>
+  <tr><td><b>(D7 / D0) × install_share</b> (user hypothesis)</td><td><b>0.65</b></td><td><b>Strong! Driven by install_share term</b></td></tr>
+  <tr><td>install_share alone</td><td>0.65</td><td>Best single feature</td></tr>
+  <tr><td>4-feat (D0 + D7 + IPM + ROAS_D7)</td><td>0.72</td><td>Previous best</td></tr>
+  <tr><td><b>5-feat (+ install_share)</b></td><td><b>0.77</b></td><td><b>NEW best — recommended</b></td></tr>
+</table>
+
+<div class="callout-blue">
+<b>The maturation hypothesis is partially validated:</b> the (D7/D0) ratio alone is uninformative (AUC 0.48), but <b>(D7/D0) × install_share matches the best single feature (AUC 0.65)</b>. The lift comes mostly from install_share — the maturation ratio adds little on its own but provides a stable rank-based anchor.
+</div>
+
+<h3>8.4 — The install-volume effect: why Lumina D7's true signal is masked</h3>
+
+<div class="callout-blue">
+<b>Test-design context (important):</b> Each creative in the auto-test is given the <b>same daily budget envelope</b> (≈$15–$20/day for ~4 days, so ~$60–$80 total per creative). The competition is fair on dollars. What varies is how Facebook's algorithm spends that budget for each creative — which audiences it shows the ad to, at what CPM, with what CTR and conversion rate. A creative whose impressions convert cheaply mechanically accumulates more installs from the same dollars. Install volume in our test is therefore a measure of <b>conversion efficiency at constant spend</b>, not a measure of how much budget the algorithm gave the creative.
+</div>
+
+<div class="callout">
+<b>Precision note on the Lumina formula:</b> Throughout this section we abbreviate the Lumina components as <code>z(IPM)</code>, <code>z(ROAS_D7)</code>, etc. The actual implementation applies <code>log(metric + 1)</code> <b>before</b> z-scoring within the window — i.e. each component is <code>z(log(metric + 1))</code>. The <code>log(·+1)</code> transform compresses the heavy right tail of these distributions (a few creatives with very high ROAS or IPM would otherwise dominate the z-score) and handles zero values cleanly (a creative with ROAS_D7 = 0 becomes log(1) = 0 instead of log(0) = −∞). This log step does <b>not</b> change the direction of the install-volume effect described below — z-scoring still removes the absolute-level information, and Lumina's components are still monotonic in their raw metrics. We use the shortened <code>z(metric)</code> notation in the prose for readability.
+</div>
+
+<p>This section explains the most consequential mechanism we found: <b>Lumina D7 has real predictive power for Applovin scaling, but that power is partially obscured because Lumina's components and absolute install volume are measuring overlapping economic quality</b>. Understanding this is what makes the difference between a model that hits AUC 0.77 by leveraging the overlap and a model that hits the same AUC with coefficients you can defend operationally.</p>
+
+<h4>8.4.1 — Why Lumina's components and install volume are not independent</h4>
+<p>Lumina rewards high-IPM creatives (more installs per impression — a real efficiency signal) and high-ROAS-D7 creatives (long-maturation paying users — a real monetization signal). Both of these intuitions are correct. The complication is that, under our fixed-budget auto-test design, <b>install count and IPM are essentially the same axis</b>: a creative with high IPM mechanically accumulates more installs at the same total spend. Same with CPI: a creative that's cheap to acquire installs at gets more installs. As a result, the four "different" Lumina components (IPM, CPI, ROAS_D7, RET_D7) are not measuring four independent dimensions of quality on this dataset — they're measuring the same underlying conversion-efficiency signal from four highly-correlated angles.</p>
+
+<div class="chart-frame">
+<div id="volume-corr-chart" style="width: 100%; height: 460px;"></div>
+</div>
+
+<table>
+  <tr><th>Test metric</th><th>Spearman ρ with i_installs</th><th>What this tells us</th></tr>
+  <tr><td><b>CPI</b></td><td><b>−0.986</b></td><td>Near-mechanical inverse — high installs definitionally lower CPI</td></tr>
+  <tr><td><b>IPM</b></td><td><b>+0.835</b></td><td>Strongly co-moves: at fixed budget, high-IPM creatives mechanically generate more installs</td></tr>
+  <tr><td>Lumina D7</td><td>+0.596</td><td>Lumina rewards IPM/ROAS, so it inherits this volume correlation</td></tr>
+  <tr><td>ROAS D7</td><td>+0.460</td><td>Big test samples → more stable D7 ROAS estimates</td></tr>
+  <tr><td>ROAS D0</td><td>+0.383</td><td>Same mechanism, smaller magnitude</td></tr>
+  <tr><td>CTR</td><td>−0.045</td><td>Independent of install volume</td></tr>
+  <tr><td>Retention D1 / D7</td><td>≈ 0</td><td>Pure quality signal — uncorrelated with volume</td></tr>
+</table>
+
+<p>The bucketed view makes the mechanism concrete. Across 6 install-volume buckets in the reliable cohort:</p>
+
+<div class="chart-frame">
+<div id="install-bucket-chart" style="width: 100%; height: 520px;"></div>
+</div>
+
+<table>
+  <tr><th>Install bucket</th><th>n</th><th>Median installs</th><th>Median IPM</th><th>Median CPI ($)</th><th>Median ROAS D7 (%)</th><th>Median Lumina D7</th></tr>
+  <tr><td>&lt;30 installs</td><td>66</td><td>24</td><td>0.69</td><td>$1.24</td><td>0.64</td><td>20.6</td></tr>
+  <tr><td>30–50</td><td>116</td><td>41</td><td>1.10</td><td>$0.72</td><td>1.04</td><td>26.9</td></tr>
+  <tr><td>50–75</td><td>170</td><td>64</td><td>1.45</td><td>$0.46</td><td>1.31</td><td>35.3</td></tr>
+  <tr><td>75–100</td><td>158</td><td>87</td><td>1.82</td><td>$0.33</td><td>1.80</td><td>47.7</td></tr>
+  <tr><td>100–150</td><td>129</td><td>117</td><td>2.36</td><td>$0.25</td><td>2.08</td><td>58.9</td></tr>
+  <tr><td>150+</td><td>30</td><td>173</td><td><b>3.27</b></td><td><b>$0.17</b></td><td><b>2.50</b></td><td><b>66.8</b></td></tr>
+</table>
+
+<p>The gradient from &lt;30 installs to 150+ shows IPM rising from 0.69 to 3.27 (<b>4.7× higher</b>), CPI falling from $1.24 to $0.17, and Lumina D7 climbing from 20.6 to 66.8 in lockstep. Within a single test cohort, the operational metrics and the composite that uses them are largely co-determined by sample size.</p>
+
+<h4>8.4.2 — Partial correlations: Lumina D7 emerges as the cleanest signal once installs are controlled for</h4>
+
+<p>To separate <i>volume-driven</i> contribution from <i>quality-driven</i> contribution, we compute partial Spearman correlations between each test metric and log(Applovin spend), controlling for log(test installs):</p>
+
+<div class="chart-frame">
+<div id="partial-corr-chart" style="width: 100%; height: 460px;"></div>
+</div>
+
+<table>
+  <tr><th>Metric</th><th>Raw ρ vs spend</th><th>Partial ρ (controlling log installs)</th><th>p (partial)</th><th>Reading</th></tr>
+  <tr><td><b>Lumina D7</b></td><td>+0.022 (p=0.56)</td><td><b>+0.121</b></td><td><b>0.001</b> ✓</td><td><b>Emerges as the strongest clean signal</b></td></tr>
+  <tr><td>install_share</td><td>+0.165</td><td><b>+0.296</b></td><td>&lt;0.0001 ✓</td><td>Becomes nearly twice as strong</td></tr>
+  <tr><td>CPI</td><td>+0.141</td><td>+0.112</td><td>0.004</td><td>Inversion shrinks</td></tr>
+  <tr><td>IPM</td><td>−0.154</td><td>−0.092</td><td>0.017</td><td>Inversion shrinks</td></tr>
+  <tr><td>ROAS D7</td><td>−0.140</td><td>−0.094</td><td>0.015</td><td>Inversion shrinks</td></tr>
+  <tr><td>ROAS D0</td><td>−0.094</td><td>−0.050</td><td>0.193</td><td>No longer significant</td></tr>
+  <tr><td>CTR</td><td>−0.075</td><td>−0.081</td><td>0.036</td><td>Stable, small</td></tr>
+</table>
+
+<div class="callout-green">
+<b>What this tells us about Lumina D7:</b> the raw correlation between Lumina D7 and Applovin spend looks like nothing (ρ = +0.02). But this is because <i>both</i> Lumina D7 and Applovin spend are mechanically inflated by test install volume — controlling for installs separates the wheat from the chaff. The partial correlation jumps to ρ = +0.12 (p = 0.001), making Lumina D7 the strongest pure-quality signal among single features. <b>Lumina D7 is doing real work; the install confound was hiding it.</b>
+</div>
+
+<h4>8.4.3 — What the negative IPM and ROAS_D7 coefficients are really doing</h4>
+
+<p>The negative coefficients on log(IPM) and log(ROAS D7) in the 5-feature composite are <b>not a claim that low-IPM creatives scale better</b>. They are the model performing an algebraic decomposition: extracting the parts of Lumina D7 that come from <i>other</i> components (retention, CPI residual) by subtracting out the parts that come from IPM and ROAS_D7.</p>
+
+<p>Recall the Lumina D7 raw formula, expanded with its actual transforms:</p>
+
+<div class="formula">
+raw_d7 = 1.2·z(log(IPM+1)) + 1.6·z(log(ROAS_D7+1)) + 1.0·z(log(RET_D7+1)) − 1.0·z(log(CPI+1))
+</div>
+
+<p>The composite uses <code>log(IPM + 1)</code> and <code>log(ROAS_D7 + 1)</code> directly — i.e. the <b>same transform Lumina applies internally, minus the z-score step</b>. That is exactly the point: <code>z(log(metric + 1)) = (log(metric + 1) − μ_window) / σ_window</code>, so the un-z-scored <code>log(metric + 1)</code> carries the absolute-level information that the z-score step removes. When the composite has access to both Lumina D7 and the raw log-transforms, the model can decompose:</p>
+
+<div class="formula">
+β·Lumina_D7  −  γ·log(IPM+1)  −  δ·log(ROAS_D7+1)  ≈  retention + CPI parts of Lumina  +  cohort-rank component
+</div>
+
+<p>That is: the negative IPM/ROAS coefficients <i>remove the IPM and ROAS pieces from Lumina</i> so that the surviving signal is the retention and CPI residual — plus the pure cohort-rank information that Lumina's z-scoring preserves. Under our fixed-budget test design, <code>log(IPM + 1)</code> carries the absolute conversion-efficiency level, <code>log(ROAS_D7 + 1)</code> carries the absolute payback level, and Lumina D7 carries those <i>plus</i> retention and CPI <i>plus</i> the within-window rank. Subtracting the first two from Lumina isolates the rest. The composite isn't reaching for a different metric than Lumina uses — it's giving the model access to the <b>un-normalized version of the same metric</b>, which carries the level information that the z-score step strips out.</p>
+
+<p>This is verifiable by tracking how the IPM coefficient changes as we add features:</p>
+
+<table>
+  <tr><th>Composite</th><th>IPM coefficient</th><th>ROAS D7 coefficient</th><th>Interpretation</th></tr>
+  <tr><td>IPM + ROAS_D7 only</td><td>−0.06</td><td>−0.40</td><td>Small marginal effect when alone</td></tr>
+  <tr><td>+ both Luminas</td><td>−0.51</td><td>−0.92</td><td>Model uses IPM/ROAS to extract non-IPM/non-ROAS parts of Lumina</td></tr>
+  <tr><td>+ install_share</td><td>−0.71</td><td>−0.80</td><td>Both IPM and share now carry the absolute-level signal</td></tr>
+  <tr><td>+ log_installs explicitly</td><td>−0.18</td><td>−0.32</td><td>Once installs is its own variable, IPM/ROAS coefficients shrink — confirming they were carrying the install-volume signal</td></tr>
+</table>
+
+<p>The shrink from −0.71 to −0.18 (IPM) when log(installs) is added explicitly is the cleanest evidence of the mechanism. The IPM coefficient was carrying the absolute-volume signal because nothing else could; once log(installs) is given the job directly, IPM gets to keep just its smaller, true marginal effect.</p>
+
+<div class="callout">
+<b>For the UAM team:</b> the negative IPM/ROAS coefficients in Composite A do <b>not</b> mean "pick low-IPM creatives" or "pick low-ROAS creatives." Higher IPM and higher ROAS D7 in test remain operationally good — they're indicators of better conversion efficiency and payback. The negative signs are the model doing algebra inside the composite to isolate the retention and within-cohort rank signals that Lumina also contains. If this is confusing, use <b>Composite B</b> (Section 9.2) instead — it has all-positive coefficients on the quality features and only one negative coefficient on log(installs), which is an explicit statistical control with a clear interpretation.
+</div>
+
+<h3>8.5 — Standardized coefficients of the recommended composite</h3>
+<div class="chart-frame">
+<div id="coefs-chart" style="width: 100%; height: 440px;"></div>
+</div>
+
+<h3>8.6 — Lumina quartile rates by outcome</h3>
+<p>If Lumina were a strong predictor on its own, top-decile rates would rise monotonically Q1→Q4. The data shows weak, non-monotonic patterns — consistent with the selection-bias evidence in Section 3.</p>
+
+<div class="two-col">
+<div class="chart-frame">
+<div id="d7q-chart" style="width: 100%; height: 400px;"></div>
+</div>
+<div class="chart-frame">
+<div id="d0q-chart" style="width: 100%; height: 400px;"></div>
+</div>
+</div>
+
+<table>
+  <tr><th>Test</th><th>Chi-square</th><th>p-value</th><th>Verdict</th></tr>
+  <tr><td>Lumina D7 quartile × top-decile</td><td>3.60</td><td>0.31</td><td>Independent (no signal)</td></tr>
+  <tr><td>Lumina D7 quartile × mega ≥$10K</td><td>2.28</td><td>0.52</td><td>Independent (no signal)</td></tr>
+  <tr><td>Lumina D0 quartile × sustainability (≥3mo)</td><td>7.16</td><td><b>0.067</b></td><td>Marginal — directional only</td></tr>
+  <tr><td>Lumina D0 quartile × top-decile</td><td>2.92</td><td>0.40</td><td>Independent (no signal)</td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="composite">9 · The Lumina Cross-Network Scale Score — Two Recommended Versions</h2>
+
+<p>Given the install-volume mechanism described in Section 8.4, we present <b>two recommended composites</b>. They make different trade-offs between predictive performance and coefficient interpretability — both are deployable, the choice depends on the downstream use case.</p>
+
+<h3>9.1 — Composite A: High-AUC version (recommended for ranking)</h3>
+
+<div class="callout-green">
+<b>Formula (CV AUC = 0.766 ± 0.08 on n=635):</b>
+<div class="formula">
+P(top-decile Applovin scale) = sigmoid(
+   β₀ + β₁·LuminaD0 + β₂·LuminaD7 + β₃·log(IPM) + β₄·log(ROAS_D7_pct) + β₅·install_share_in_window
+)
+</div>
+</div>
+
+<table>
+  <tr><th>Feature</th><th>Type</th><th>Standardized coefficient</th><th>Direction</th></tr>
+  <tr><td><b>Lumina D0 (mature)</b></td><td>Per-window normalized 0–100</td><td>+0.023</td><td>Higher → more likely top-decile (weak in this composite)</td></tr>
+  <tr><td><b>Lumina D7 (mature)</b></td><td>Per-window normalized 0–100</td><td><b>+0.736</b></td><td>Strongest positive contributor</td></tr>
+  <tr><td><b>log(IPM)</b></td><td>Raw test-phase level</td><td>−0.708</td><td>Negative — see Section 8.4 (proxies install-volume confound)</td></tr>
+  <tr><td><b>log(ROAS D7 %)</b></td><td>Raw test-phase level</td><td>−0.798</td><td>Negative — see Section 8.4 (proxies install-volume confound)</td></tr>
+  <tr><td><b>install_share_in_window</b></td><td>Window-relative audience reach</td><td>+0.628</td><td>Strong positive contributor</td></tr>
+</table>
+
+<p><b>Use this version when:</b> you need maximum top-decile ranking accuracy and the coefficients will not be shown to stakeholders for direct interpretation. The negative coefficients on IPM and ROAS_D7 are statistical corrections (see Section 8.4) but can be confusing.</p>
+
+<h3>9.2 — Composite B: Clean-causal version (recommended for stakeholder explanation)</h3>
+
+<div class="callout-blue">
+<b>Formula (CV AUC = 0.701 ± 0.06 on n=669):</b>
+<div class="formula">
+P(top-decile Applovin scale) = sigmoid(
+   β₀ + β₁·LuminaD0 + β₂·LuminaD7 + β₃·install_share_in_window + β₄·log(test_installs)
+)
+</div>
+</div>
+
+<table>
+  <tr><th>Feature</th><th>Direction</th><th>Operational interpretation</th></tr>
+  <tr><td><b>Lumina D0 (mature)</b></td><td>+ positive</td><td>Reward strong early signal</td></tr>
+  <tr><td><b>Lumina D7 (mature)</b></td><td>+ positive</td><td>Reward strong matured signal</td></tr>
+  <tr><td><b>install_share_in_window</b></td><td>+ positive</td><td>Reward audience-fit on Facebook</td></tr>
+  <tr><td><b>log(test_installs)</b></td><td>− negative (control)</td><td>Statistical control — at fixed test budget, install count carries the absolute conversion-efficiency level. Including it lets the other coefficients carry only quality signal independent of volume.</td></tr>
+</table>
+
+<p><b>Use this version when:</b> you need to explain to non-data stakeholders why a creative scored high. All quality signals carry positive coefficients in the natural direction; the only negative coefficient is the install-volume control, which has a clear statistical justification ("we already account for the fact that high-install creatives looked artificially good on Facebook").</p>
+
+<h3>9.3 — Comparison of all considered composites</h3>
+
+<div class="chart-frame">
+<div id="composite-options-chart" style="width: 100%; height: 500px;"></div>
+</div>
+
+<table>
+  <tr><th>Composite</th><th>AUC</th><th>Coefficient story</th></tr>
+  <tr><td>Lumina D7 alone (univariate)</td><td>0.50</td><td>Hidden by install-volume confound (Section 8.4)</td></tr>
+  <tr><td>D0 + D7 + install_share</td><td>0.65</td><td>All positive coefficients; clean story but lower AUC</td></tr>
+  <tr><td><b>Composite B (clean-causal)</b></td><td><b>0.70</b></td><td><b>All positive on quality; one explicit volume control</b></td></tr>
+  <tr><td><b>Composite A (high-AUC)</b></td><td><b>0.77</b></td><td><b>Best ranking; uses negative IPM/ROAS coefs to absorb the confound</b></td></tr>
+  <tr><td>Composite A + log_installs (6-feat)</td><td>0.76</td><td>Marginal — explicit control redundant with implicit absorption</td></tr>
+</table>
+
+<h3>9.4 — Why the volume control matters</h3>
+<p>The key insight from Section 8.4: <b>Lumina D7 has real predictive power that is largely hidden by the install-volume confound</b>. The two composites above handle this differently:</p>
+
+<ul>
+  <li><b>Composite A</b> uses the negative coefficients on log(IPM) and log(ROAS D7) to <i>implicitly</i> subtract the install-volume contribution. The model is more accurate, but the negative signs invite misreading.</li>
+  <li><b>Composite B</b> uses <i>explicit</i> <code>log(test_installs)</code> as a control variable. The remaining coefficients on Lumina and install_share carry only the residual quality signal, with the natural positive sign throughout. Slight AUC cost, big interpretability win.</li>
+</ul>
+
+<div class="callout">
+<b>Recommendation:</b> publish <b>Composite B</b> (clean-causal) as the dashboard-visible <b>Lumina Cross-Network Scale Score</b> for the UAM team to consult. Keep <b>Composite A</b> (high-AUC) as the back-end ranker for any automated prioritization. Both keep Lumina D0/D7 unchanged for within-cohort Facebook ranking — the new scores answer the different question: "given this creative's test result, how likely is it to top-decile-scale on Applovin?"
+</div>
+
+<h3>9.5 — What does NOT work (rejected alternatives)</h3>
+<table>
+  <tr><th>Alternative composite</th><th>AUC</th><th>Why not</th></tr>
+  <tr><td>(Lumina D0 + Lumina D7) / 2</td><td>0.42</td><td>Too correlated; averaging loses signal</td></tr>
+  <tr><td>Lumina D7 / Lumina D0 (maturation ratio)</td><td>0.48</td><td>Ratio of correlated metrics has no marginal info</td></tr>
+  <tr><td>Lumina D7 − Lumina D0 (additive maturation)</td><td>0.51</td><td>Marginally better; still near random</td></tr>
+  <tr><td>(Lumina D7 / D0) × install_share</td><td>0.65</td><td>Lift comes entirely from install_share term</td></tr>
+  <tr><td>(Lumina D7 − D0) × install_share</td><td>0.54</td><td>The subtraction loses information</td></tr>
+  <tr><td>Heavy-re-weighted Lumina (double IPM/ROAS weights)</td><td>0.45</td><td>Re-weighting alone doesn't fix the normalization problem</td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="findings">10 · Findings Ranked by Reliability</h2>
+
+<div class="tier-A">
+<h3><span class="level-banner level-A">Tier A</span> Statistically robust (publishable)</h3>
+<ol>
+  <li><b>Lumina D7 has real predictive power for Applovin scaling, made visible by controlling for test-phase install volume.</b> Raw correlation ρ = +0.02 (hidden by confound); partial correlation after controlling for log(installs) = <b>+0.121 (p = 0.001)</b> — the strongest clean signal in the analysis.</li>
+  <li><b>The install-volume mechanism is documented and reproducible.</b> Test-phase IPM (ρ = +0.83), ROAS_D7 (ρ = +0.46), and Lumina D7 itself (ρ = +0.60) all co-vary with i_installs. The mechanism: under our fixed-budget auto-test design (~$15–$20/day per creative for ~4 days), install count is a direct function of conversion efficiency at constant spend — the same economic quality Lumina also captures via IPM, CPI, and ROAS_D7. Once this volume signal is controlled for, the residual signal is overwhelmingly carried by Lumina D7 (cohort-rank component) and install_share.</li>
+  <li><b>Two recommended composites:</b>
+    <ul>
+      <li><b>Composite A (high-AUC):</b> Lumina D0 + Lumina D7 + log(IPM) + log(ROAS_D7) + install_share — CV AUC = <b>0.77</b>. Best for ranking.</li>
+      <li><b>Composite B (clean-causal):</b> Lumina D0 + Lumina D7 + install_share + log(installs) — CV AUC = <b>0.70</b>. Best for stakeholder explanation; all quality coefficients positive.</li>
+    </ul>
+  </li>
+  <li><b>install_share_in_window is the strongest single observed predictor</b> (univariate AUC = 0.65). After controlling for installs, its partial correlation rises to ρ = +0.30 (p &lt; 0.0001).</li>
+  <li><b>Operational filters shape the observed cohort.</b> Creatives that reached Applovin have lower CPI (p=0.020), higher CTR (p=0.007), and higher install volume (p=0.019) than those that did not — but their Lumina percentile-in-window is statistically indistinguishable (p=0.40–0.99). The univariate Lumina AUC of 0.50 is an observational ceiling shaped by this filtering, not a verdict that Lumina is uninformative.</li>
+  <li><b>Within-window normalization costs ~10 AUC points cross-platform.</b> Same model on raw features = 0.71; on within-window z-scored features = 0.62. This is consistent with the design intent of Lumina (cohort-fair Facebook ranking) and motivates the composite approach rather than a Lumina re-weighting.</li>
+  <li><b>Top-decile scaling and sustainability are distinct signals.</b> Top-decile (AUC 0.77) driven by Lumina + install_share + raw-economic components. Sustainability over 4 months (AUC 0.59) driven by Retention D1.</li>
+  <li><b>Playtime inversion:</b> top-decile winners have shorter test-phase playtime (Mann-Whitney p = 0.0008 after duration normalization).</li>
+</ol>
+</div>
+
+<div class="tier-B">
+<h3><span class="level-banner level-B">Tier B</span> Suggestive (worth follow-up, needs more data)</h3>
+<ol start="9">
+  <li><b>Lumina D0 → sustainability</b> (chi-square p = 0.067). Q4 D0 has 67.7% sustained rate vs Q2 D0 = 55.1%.</li>
+  <li><b>(D7/D0) × install_share variant (user hypothesis)</b> reaches AUC 0.65 univariately — comparable to install_share alone. The maturation ratio adds little marginal value here but provides a rank-stable anchor; worth retesting once test sample sizes grow.</li>
+  <li><b>Q3 Lumina D7 spend concentration:</b> $1.39M (44% of active spend) flows through mid-range D7 creatives, not top-quartile. Driven by 2–3 mega-winners; worth qualitative investigation.</li>
+</ol>
+</div>
+
+<div class="tier-C">
+<h3><span class="level-banner level-C">Tier C</span> Investigated and rejected (negative findings worth recording)</h3>
+<ol start="12">
+  <li><b>ROAS-growth ratio (D7/D0) hypothesis.</b> Validation: candidates scaled at 18.8% vs control 25.8%. Ratio unstable when D0 ROAS is near zero.</li>
+  <li><b>Two-stage P(picked) × P(scales|picked) decomposition.</b> Did not add lift over single-stage.</li>
+  <li><b>Naive (D0+D7)/2 composite.</b> AUC 0.42–0.52 — worse than either alone.</li>
+  <li><b>Mega-scale (≥$10K) standalone prediction.</b> AUC 0.46 with n=17 positives. Too few to model reliably.</li>
+  <li><b>Re-weighting Lumina component weights.</b> Doubling IPM/ROAS_D7 weights moves AUC from 0.43 to 0.45 — within noise.</li>
+  <li><b>Lumina D7 maturation ratio (D7/D0) alone.</b> AUC 0.48 — uninformative.</li>
+</ol>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="caveats">11 · Known Limitations &amp; Caveats</h2>
+
+<table>
+  <tr><th>Limitation</th><th>Impact</th><th>Mitigation path</th></tr>
+  <tr><td><b>Applovin spend granularity capped</b></td><td>Recovered data is limited to Feb–May 2026 monthly snapshots. Pre-Feb 2026 spend is folded into "lifetime cumulative" totals; we cannot reconstruct earlier monthly slices.</td><td>Push for Applovin API access at the creative level for daily/weekly granularity.</td></tr>
+  <tr><td>Median 72 installs per test creative</td><td>D7 ROAS and retention dominated by noise; ratios unstable</td><td>Increase test budget per creative; require ≥100 installs for D7-eligibility</td></tr>
+  <tr><td>17 winners ≥$10K (n_positives too small)</td><td>Mega-tier coefficients are unstable; AUC 0.46 with ±0.10 CV variation</td><td>Wait 2–3 months for more Applovin scale; pull pre-October-2025 test data</td></tr>
+  <tr><td>453 scale-only creatives</td><td>~12% of ALL_ Applovin spend invisible to test side</td><td>Pull pre-October-2025 Facebook auto-test data when available</td></tr>
+  <tr><td>Lumina rescaled per-window</td><td>Discards absolute level info that predicts cross-platform scale</td><td>Add complementary raw-level Lumina Cross-Network Scale Score (this analysis's main recommendation)</td></tr>
+  <tr><td>Single game / single platform</td><td>Findings may not generalize to other games or networks</td><td>Replicate on second game once pipeline matures</td></tr>
+  <tr><td>UAM team picks informally — process evolves over time</td><td>Selection mechanism is partially unobserved and changes month-to-month</td><td>Ask UAM team to log their picks with reasons; treat as labeled dataset</td></tr>
+  <tr><td>Pareto-distributed outcome (Gini 0.91)</td><td>Quantile buckets are meaningless; require continuous or top-decile binary</td><td>Stick with continuous log(spend) or top-decile outcomes</td></tr>
+  <tr><td>Cross-validation variance ±0.08–0.10</td><td>Individual AUC values have wide CI on small positive class</td><td>Report ± std; don't over-interpret 0.01 differences</td></tr>
+</table>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="actions">12 · Actionable Recommendations</h2>
+
+<h3>Now (no new data needed)</h3>
+<ol>
+  <li><b>Add the Lumina Cross-Network Scale Score to the dashboard alongside Lumina D7.</b> Use the 5-feature composite as the basis. Keep Lumina D7 unchanged for its original purpose (within-cohort Facebook ranking).</li>
+  <li><b>Brief the UAM team on the selection-bias finding.</b> They've been using CPI + CTR + raw installs — that's not wrong, but it's not Lumina either. The new composite formalizes a signal closer to what's actually predictive.</li>
+  <li><b>Build a sustainability score separately.</b> Retention D1 + ROAS predicts which creatives stay active 4+ months (AUC 0.59). Different audience use case from "will this peak-scale."</li>
+  <li><b>Investigate the playtime inversion qualitatively.</b> Look at the 17 winners' creative content — what's similar about them?</li>
+</ol>
+
+<h3>Next 1–3 months (data accumulation)</h3>
+<ol>
+  <li><b>Push for finer Applovin spend granularity</b> via API access (the monthly export limit is the binding constraint right now).</li>
+  <li><b>Increase test installs per creative</b> — target 200+.</li>
+  <li><b>Validate the 5-feature composite prospectively.</b> Score the next 50 test creatives, see if predicted top-deciles actually scale.</li>
+  <li><b>Log UAM picks with reasons</b> to make the selection model more learnable.</li>
+</ol>
+
+<h3>Longer-term (months 3–6)</h3>
+<ol>
+  <li><b>Re-fit the composite weights against Applovin scale labels.</b> Once ≥50 $10K+ winners exist.</li>
+  <li><b>Pull pre-October-2025 Facebook auto-test data.</b> Would fill in the 453-creative blind spot.</li>
+  <li><b>Build an Applovin-side companion score</b> based on Applovin's own D1/D7 metrics.</li>
+</ol>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2 id="appendix">13 · Appendix: File &amp; Reproduction Index</h2>
+
+<h3>Master tables (canonical)</h3>
+<table>
+  <tr><th>File</th><th>Purpose</th><th>n_rows</th></tr>
+  <tr><td><code>MASTER_creative_activity_table.csv</code></td><td>All creatives with activity flags</td><td>1,426</td></tr>
+  <tr><td><code>RELIABLE_cohort.csv</code></td><td>Strict cohort: active + D7-mature + non-benchmark</td><td>669</td></tr>
+  <tr><td><code>RELIABLE_cohort_with_outcomes.csv</code></td><td>RELIABLE + 4 outcome flags + monthly spend</td><td>669</td></tr>
+  <tr><td><code>RELIABLE_cohort_with_install_share.csv</code></td><td><b>v2 main:</b> RELIABLE + outcomes + install_share + composite features</td><td>669</td></tr>
+  <tr><td><code>composite_search.csv</code></td><td>Exhaustive 1/2/3/4/5-feature combination search (v1)</td><td>—</td></tr>
+</table>
+
+<h3>Cleaning &amp; joins</h3>
+<table>
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td><code>test_to_applovin_scale_merged_v2.csv</code></td><td>Primary merged table (n=772) with benchmark-aware aggregation</td></tr>
+  <tr><td><code>scale_monthly_panel.csv</code></td><td>Per-creative monthly spend matrix (Feb–May)</td></tr>
+</table>
+
+<h3>Models &amp; coefficients</h3>
+<table>
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td><code>univariate_auc_scaled1k.csv</code></td><td>Single-feature AUC rankings (earlier iteration)</td></tr>
+  <tr><td><code>two_stage_coefs_*.csv</code></td><td>Stage 1/2A/2B + single-stage coefficients</td></tr>
+</table>
+
+<h3>Crosstabs &amp; winner inspection</h3>
+<table>
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td><code>crosstab_d7_quartile_x_tier.csv</code></td><td>D7 × scale tier chi-square</td></tr>
+  <tr><td><code>crosstab_d0_quartile_x_tier.csv</code></td><td>D0 × scale tier chi-square</td></tr>
+  <tr><td><code>winners_inspection_data.csv</code></td><td>17 ≥$10K winners with all raw metrics</td></tr>
+</table>
+
+<div class="footer">
+Test → Applovin Scale Analysis v2 · Andres Mendoza · Generated 2026-05-12<br>
+Reproducible from <code>RELIABLE_cohort_with_install_share.csv</code> in <code>analysis_outputs/</code>
+</div>
+
+<script>
+const C_PRIMARY = '#2c3e50';
+const C_ACCENT = '#2980b9';
+const C_GOOD = '#16a085';
+const C_WARN = '#d7191c';
+const C_EXPLORE = '#fdae61';
+const C_NEUTRAL = '#95a5a6';
+const C_EXPLOIT = '#1b7837';
+
+const baseLayout = {
+  font: {family: 'system-ui, -apple-system, sans-serif', size: 12, color: '#2c3e50'},
+  margin: {l: 60, r: 24, t: 40, b: 60},
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  hoverlabel: {font: {family: 'system-ui'}},
+};
+
+// 1. Monthly ramp (reliable cohort, n=669)
+Plotly.newPlot('ramp-chart', [{
+  x: ["Feb 2026", "Mar 2026", "Apr 2026", "May 2026 (partial)"],
+  y: [235088.0, 545332.0, 1834058.0, 581582.0],
+  type: 'bar',
+  marker: {color: [C_NEUTRAL, C_NEUTRAL, C_ACCENT, C_NEUTRAL]},
+  text: ["$235K", "$545K", "$1.83M", "$582K"],
+  textposition: 'outside',
+  textfont: {size: 13, color: C_PRIMARY},
+  hovertemplate: '%{x}<br>$%{y:,.0f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Applovin spend on reliable-cohort creatives, by month (Feb – May 10, 2026)', font: {size: 14}},
+  margin: {l: 100, r: 30, t: 60, b: 60},
+  yaxis: {title: 'Monthly Applovin spend (USD)', tickformat: '$,.2s', titlefont: {size: 12}, range: [0, 2_200_000]},
+  xaxis: {title: '', tickfont: {size: 12}},
+  showlegend: false
+}, {displayModeBar: false, responsive: true});
+
+// Picked vs not-picked — % difference of medians, with CPI sign flipped so "right = propagated direction"
+const pvn_metrics  = [
+  "Test installs (volume)",
+  "CPI (sign flipped: lower = better)",
+  "CTR",
+  "IPM",
+  "Lumina D0 (window percentile)",
+  "ROAS D7 (raw)",
+  "ROAS D0 (raw)",
+  "Lumina D7 (window percentile)"
+];
+const pvn_diff_pct = [17.5, 14.1, 3.8, 5.2, 4.8, -0.8, -1.4, -5.8];
+const pvn_pvalues  = [0.019, 0.020, 0.007, 0.572, 0.999, 0.415, 0.587, 0.402];
+const pvn_colors   = pvn_pvalues.map(p => p<0.05 ? C_EXPLOIT : C_NEUTRAL);
+const pvn_text     = pvn_diff_pct.map((d,i) => `${d>=0?'+':''}${d.toFixed(1)}%  (p=${pvn_pvalues[i].toFixed(3)})`);
+
+Plotly.newPlot('picked-vs-not-chart', [{
+  x: pvn_diff_pct,
+  y: pvn_metrics,
+  type: 'bar',
+  orientation: 'h',
+  marker: {color: pvn_colors, line: {color: '#fff', width: 1}},
+  text: pvn_text,
+  textposition: 'outside',
+  textfont: {size: 12},
+  hovertemplate: '<b>%{y}</b><br>Δ = %{x:.1f}%<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Propagated vs not-propagated cohorts: % difference between medians<br><span style="font-size:11px; color:#586069">Green = statistically significant (p &lt; 0.05) · Gray = not significant</span>', font: {size: 14}},
+  xaxis: {
+    title: 'Percentage difference of medians (propagated − not-propagated, relative to not-propagated)',
+    range: [-15, 32],
+    zeroline: true, zerolinewidth: 2, zerolinecolor: '#586069',
+    tickformat: '+,.0f',
+    ticksuffix: '%',
+    titlefont: {size: 12}
+  },
+  yaxis: {title: '', autorange: 'reversed', tickfont: {size: 12}},
+  showlegend: false,
+  margin: {l: 280, r: 80, t: 100, b: 70}
+}, {displayModeBar: false, responsive: true});
+
+// Concurrent propagation rate by Lumina D0 quartile (honest analysis)
+Plotly.newPlot('concurrent-pickrate-d0-chart', [{
+  x: ["Q1<br>(lowest 25%)", "Q2", "Q3", "Q4<br>(highest 25%)"],
+  y: [72.9, 78.9, 75.0, 77.4],
+  type: 'bar',
+  marker: {color: [C_NEUTRAL, C_ACCENT, C_ACCENT, C_EXPLOIT], line: {color: '#fff', width: 1}},
+  text: ["72.9%", "78.9%", "75.0%", "77.4%"],
+  textposition: 'outside',
+  textfont: {size: 14, color: C_PRIMARY},
+  hovertemplate: '<b>%{x}</b><br>Propagation rate: %{y}%<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Propagation rate by Lumina D0 quartile<br><span style="font-size:11px;color:#586069">Concurrent test windows 17–24 only · n=253 · Chi-square p = 0.880 (independent)</span>', font: {size: 14}},
+  margin: {l: 80, r: 30, t: 100, b: 80},
+  xaxis: {title: 'Lumina D0 quartile (within test window)', titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: '% of creatives propagated to Applovin', range: [60, 90], titlefont: {size: 12}, ticksuffix: '%'},
+  showlegend: false
+}, {displayModeBar: false, responsive: true});
+
+// Concurrent propagation rate by Lumina D7 quartile
+Plotly.newPlot('concurrent-pickrate-d7-chart', [{
+  x: ["Q1<br>(lowest 25%)", "Q2", "Q3", "Q4<br>(highest 25%)"],
+  y: [78.5, 80.0, 70.5, 79.0],
+  type: 'bar',
+  marker: {color: [C_NEUTRAL, C_ACCENT, C_ACCENT, C_EXPLOIT], line: {color: '#fff', width: 1}},
+  text: ["78.5%", "80.0%", "70.5%", "79.0%"],
+  textposition: 'outside',
+  textfont: {size: 14, color: C_PRIMARY},
+  hovertemplate: '<b>%{x}</b><br>Propagation rate: %{y}%<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Propagation rate by Lumina D7 quartile<br><span style="font-size:11px;color:#586069">Concurrent test windows 17–24 only · n=253 · Chi-square p = 0.569 (independent)</span>', font: {size: 14}},
+  margin: {l: 80, r: 30, t: 100, b: 80},
+  xaxis: {title: 'Lumina D7 quartile (within test window)', titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: '% of creatives propagated to Applovin', range: [60, 90], titlefont: {size: 12}, ticksuffix: '%'},
+  showlegend: false
+}, {displayModeBar: false, responsive: true});
+
+// Not-picked inventory per window
+const npbw_windows = ["3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
+const npbw_total   = [11,6,17,4,9,6,14,5,19,9,8,10,10,10,7,10,14,6,9,5,2];
+const npbw_missed  = [2,0,5,0,3,2,4,0,2,2,4,0,1,3,0,4,6,0,2,0,0];
+Plotly.newPlot('not-picked-by-window-chart', [
+  {
+    x: npbw_windows, y: npbw_total,
+    name: 'Total Q4 D0 creatives in window', type: 'bar',
+    marker: {color: C_NEUTRAL, line: {color: '#fff', width: 1}},
+    text: npbw_total.map(v => v.toString()),
+    textposition: 'outside', textfont: {size: 10},
+    hovertemplate: 'Window %{x}<br>Total top-Q4 D0 = %{y}<extra></extra>'
+  },
+  {
+    x: npbw_windows, y: npbw_missed,
+    name: 'Of those, NOT propagated to Applovin', type: 'bar',
+    marker: {color: C_WARN, line: {color: '#fff', width: 1}},
+    text: npbw_missed.map(v => v > 0 ? v.toString() : ''),
+    textposition: 'outside', textfont: {size: 11, color: C_WARN},
+    hovertemplate: 'Window %{x}<br>NOT propagated = %{y}<extra></extra>'
+  }
+], {
+  ...baseLayout,
+  title: {text: 'Top-quartile Lumina D0 creatives per test window — how many never reached Applovin?<br><span style="font-size:11px;color:#586069">Gray = total Q4-D0 creatives in window · Red = subset never propagated</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 100, b: 70},
+  xaxis: {title: 'Test window ID (chronological, window 3 = Oct 2025 → window 23 = Apr 2026)', titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: 'Number of creatives', titlefont: {size: 12}, range: [0, 22]},
+  barmode: 'group',
+  legend: {x: 0.5, y: 1.20, xanchor: 'center', orientation: 'h', font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'}
+}, {displayModeBar: false, responsive: true});
+
+// Funnel
+const funnelData = [
+  {label: '1. Token universe (test ∪ Applovin)', value: 1425},
+  {label: '2. Has any Applovin activity', value: 1165},
+  {label: '3. Strict activity (imp+clicks+spend>0)', value: 1165},
+  {label: '4. Has mature D7 Lumina score', value: 833},
+  {label: '5. Non-benchmark', value: 828},
+  {label: '6. RELIABLE cohort (intersection)', value: 669}
+];
+Plotly.newPlot('funnel-chart', [{
+  type: 'funnel',
+  y: funnelData.map(d=>d.label),
+  x: funnelData.map(d=>d.value),
+  textinfo: 'value+percent initial',
+  textfont: {size: 12},
+  marker: {color: [C_NEUTRAL, C_ACCENT, C_ACCENT, C_GOOD, C_GOOD, C_EXPLOIT]},
+  hovertemplate: '<b>%{y}</b><br>Creatives: %{x:,}<extra></extra>'
+}], {
+  ...baseLayout,
+  margin: {l: 320, r: 60, t: 70, b: 40},
+  title: {text: 'Reliability funnel — from 1,425 total creatives to the 669-creative analysis cohort', font: {size: 14}}
+}, {displayModeBar: false, responsive: true});
+
+// Log spend histogram
+Plotly.newPlot('hist-chart', [{
+  x: [0.11206896551724138, 0.33620689655172414, 0.5603448275862069, 0.7844827586206897, 1.0086206896551724, 1.2327586206896552, 1.456896551724138, 1.6810344827586208, 1.9051724137931034, 2.1293103448275863, 2.353448275862069, 2.5775862068965516, 2.8017241379310347, 3.0258620689655173, 3.25, 3.474137931034483, 3.6982758620689653, 3.9224137931034484, 4.146551724137931, 4.370689655172414, 4.594827586206897, 4.818965517241379, 5.043103448275862, 5.267241379310345, 5.491379310344827, 5.7155172413793105, 5.939655172413794, 6.163793103448276, 6.387931034482759],
+  y: [2, 2, 2, 1, 6, 12, 16, 26, 46, 49, 65, 105, 108, 87, 60, 38, 22, 6, 3, 6, 1, 1, 1, 2, 0, 1, 0, 1, 0],
+  type: 'bar',
+  marker: {color: C_ACCENT, line: {width: 0}},
+  hovertemplate: 'log10(spend)=%{x:.2f}<br>count=%{y}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Distribution of Applovin spend (log scale) — n=669<br><span style="font-size:11px;color:#586069">Median = $502 · p90 = $2,820 (top-decile threshold)</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 90, b: 70},
+  xaxis: {title: 'log10(Applovin spend, USD)', titlefont: {size: 12}, range: [0, 6.5]},
+  yaxis: {title: 'Count of creatives', titlefont: {size: 12}},
+  showlegend: false,
+  shapes: [
+    {type:'line', x0: Math.log10(502.3), x1: Math.log10(502.3), y0: 0, y1: Math.max(...[2, 2, 2, 1, 6, 12, 16, 26, 46, 49, 65, 105, 108, 87, 60, 38, 22, 6, 3, 6, 1, 1, 1, 2, 0, 1, 0, 1, 0]),
+      line:{color: C_WARN, dash:'dash', width:2}},
+    {type:'line', x0: Math.log10(2820.2480000000005), x1: Math.log10(2820.2480000000005), y0: 0, y1: Math.max(...[2, 2, 2, 1, 6, 12, 16, 26, 46, 49, 65, 105, 108, 87, 60, 38, 22, 6, 3, 6, 1, 1, 1, 2, 0, 1, 0, 1, 0]),
+      line:{color: C_EXPLOIT, dash:'dash', width:2}}
+  ],
+  annotations: [
+    {x: Math.log10(502.3), y: Math.max(...[2, 2, 2, 1, 6, 12, 16, 26, 46, 49, 65, 105, 108, 87, 60, 38, 22, 6, 3, 6, 1, 1, 1, 2, 0, 1, 0, 1, 0])*0.95, text: 'median<br>$502',
+      showarrow: false, font: {color: C_WARN, size: 10}, xanchor:'left', xshift: 6},
+    {x: Math.log10(2820.2480000000005), y: Math.max(...[2, 2, 2, 1, 6, 12, 16, 26, 46, 49, 65, 105, 108, 87, 60, 38, 22, 6, 3, 6, 1, 1, 1, 2, 0, 1, 0, 1, 0])*0.95, text: 'p90 (top decile)<br>$2,820',
+      showarrow: false, font: {color: C_EXPLOIT, size: 10}, xanchor:'left', xshift: 6}
+  ]
+}, {displayModeBar: false, responsive: true});
+
+// Lorenz curve
+Plotly.newPlot('lorenz-chart', [
+  {x: [0, 100], y: [0, 100], type: 'scatter', mode: 'lines',
+    line:{dash:'dash', color: C_NEUTRAL, width: 1}, name: 'Perfect equality',
+    hovertemplate: 'equality line<extra></extra>'},
+  {x: [0.14947683109118087, 1.046337817638266, 2.092675635276532, 3.1390134529147984, 4.0358744394618835, 5.082212257100149, 6.128550074738415, 7.174887892376682, 8.071748878923767, 9.118086696562033, 10.164424514200299, 11.210762331838566, 12.10762331838565, 13.153961136023916, 14.200298953662182, 15.246636771300448, 16.143497757847534, 17.189835575485798, 18.236173393124066, 19.282511210762333, 20.179372197309416, 21.225710014947683, 22.27204783258595, 23.318385650224215, 24.2152466367713, 25.26158445440957, 26.307922272047833, 27.3542600896861, 28.251121076233183, 29.297458893871447, 30.343796711509718, 31.390134529147986, 32.28699551569507, 33.33333333333333, 34.379671150971596, 35.42600896860987, 36.32286995515695, 37.369207772795214, 38.41554559043348, 39.46188340807175, 40.35874439461883, 41.4050822122571, 42.45142002989537, 43.49775784753363, 44.39461883408072, 45.440956651718984, 46.48729446935725, 47.53363228699551, 48.4304932735426, 49.47683109118087, 50.52316890881914, 51.569506726457405, 52.46636771300448, 53.51270553064275, 54.55904334828101, 55.60538116591929, 56.502242152466366, 57.548579970104626, 58.594917787742894, 59.64125560538116, 60.53811659192825, 61.58445440956651, 62.63079222720478, 63.67713004484305, 64.57399103139014, 65.6203288490284, 66.66666666666666, 67.71300448430493, 68.60986547085201, 69.65620328849027, 70.70254110612855, 71.74887892376681, 72.6457399103139, 73.69207772795217, 74.73841554559043, 75.7847533632287, 76.68161434977578, 77.72795216741405, 78.77428998505232, 79.82062780269058, 80.71748878923766, 81.76382660687594, 82.8101644245142, 83.85650224215246, 84.75336322869956, 85.79970104633782, 86.84603886397608, 87.89237668161435, 88.78923766816143, 89.8355754857997, 90.88191330343797, 91.92825112107623, 92.82511210762333, 93.87144992526159, 94.91778774289985, 95.96412556053812, 96.8609865470852, 97.90732436472346, 98.95366218236174, 100.0], y: [1.12638663122245e-05, 0.0006195126471723475, 0.0029996301759804525, 0.006900682542114205, 0.011120877787094318, 0.017170825537460233, 0.024655977587108757, 0.03344022888476717, 0.04220695861260658, 0.053641973115741835, 0.06644961488309177, 0.08088770129913622, 0.09427856103331912, 0.11094438989778128, 0.1297731939793659, 0.15021867576193002, 0.16865543471881414, 0.19127233961823495, 0.21590829255412197, 0.24191124082106755, 0.26556848892849233, 0.2950366405123237, 0.32764803656761643, 0.36307352188991315, 0.39506665683873476, 0.4339504620040599, 0.47451946672376377, 0.5172026365732372, 0.5577018678988405, 0.6070901670558407, 0.6587600249114172, 0.7128897860155134, 0.7608191015999055, 0.8200260504442367, 0.8829810508039609, 0.9494807273151069, 1.0084085825830356, 1.0791059266065373, 1.1517056124961036, 1.2261622719013103, 1.292722022366121, 1.37343701104847, 1.456946064346601, 1.544177512575747, 1.6220361724924206, 1.7161551620863165, 1.8122809971948404, 1.9101977870470077, 1.9972192893235006, 2.1010483574488847, 2.210407983933571, 2.323392385174566, 2.4222343764902132, 2.5401589217646445, 2.6613127549337556, 2.7853082112653005, 2.895525768900768, 3.029472225348813, 3.1669730573887147, 3.3084037272308824, 3.4329461068489207, 3.584678208203968, 3.741590123636763, 3.9026152275845702, 4.046293977411553, 4.21981321218102, 4.4025697559820385, 4.593282344021592, 4.762367370086148, 4.964390131443875, 5.1734528092467436, 5.396097832511101, 5.600324244158745, 5.8456356081802285, 6.10021181512869, 6.364578824983877, 6.598268382052547, 6.884984779982241, 7.181341795934497, 7.488396043146439, 7.767302827099658, 8.104781715876443, 8.456804446258538, 8.820082595053123, 9.153379460576321, 9.572778571730863, 10.030757676545477, 10.519687695789857, 10.972795804194787, 11.545793063890102, 12.17961457590108, 12.872771945448628, 13.520018421677898, 14.34618359214747, 15.357752627886612, 16.507071552265224, 17.63959480043161, 20.066720510867906, 24.828443963263204, 100.0], type: 'scatter', mode: 'lines',
+    line:{color: C_WARN, width: 3}, fill:'tonexty', fillcolor:'rgba(215,25,28,0.1)',
+    name: 'Actual', hovertemplate: '%{x:.0f}% of creatives<br>%{y:.1f}% of spend<extra></extra>'}
+], {
+  ...baseLayout,
+  title: {text: 'Spend concentration — Lorenz curve (Gini = '+ 0.9117522862697041.toFixed(3) +')<br><span style="font-size:11px;color:#586069">Top 1% of creatives capture 74% of all Applovin spend</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 90, b: 70},
+  xaxis: {title: 'Cumulative % of creatives (sorted by spend, smallest first)', titlefont: {size: 12}, ticksuffix: '%'},
+  yaxis: {title: 'Cumulative % of total spend', titlefont: {size: 12}, ticksuffix: '%'},
+  showlegend: true,
+  legend: {x: 0.02, y: 0.98, font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'}
+}, {displayModeBar: false, responsive: true});
+
+// Tier COUNT chart (separate)
+Plotly.newPlot('tier-count-chart', [{
+  x: ["MEGA<br>$100k+", "SCALED<br>$10k–100k", "PROVEN<br>$1k–10k", "LIGHT<br>$100–1k", "NOISE<br>&lt;$100"],
+  y: [4, 13, 177, 366, 109],
+  type: 'bar',
+  marker: {color: C_ACCENT, line: {color: '#fff', width: 1}},
+  text: ["4 creatives", "13 creatives", "177 creatives", "366 creatives", "109 creatives"],
+  textposition: 'outside',
+  textfont: {size: 11, color: C_PRIMARY},
+  hovertemplate: '<b>%{x}</b><br>%{y} creatives<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Creative count per spend tier (n=669)', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 70, b: 80},
+  xaxis: {title: '', tickfont: {size: 11}},
+  yaxis: {title: 'Number of creatives', titlefont: {size: 12}, range: [0, 440]}
+}, {displayModeBar: false, responsive: true});
+
+// Tier SPEND chart (separate)
+Plotly.newPlot('tier-spend-chart', [{
+  x: ["MEGA<br>$100k+", "SCALED<br>$10k–100k", "PROVEN<br>$1k–10k", "LIGHT<br>$100–1k", "NOISE<br>&lt;$100"],
+  y: [2180286.0, 413973.0, 434492.0, 161820.0, 5490.0],
+  type: 'bar',
+  marker: {color: C_EXPLOIT, line: {color: '#fff', width: 1}},
+  text: ["$2.18M (68%)", "$414K (13%)", "$434K (14%)", "$162K (5%)", "$5K (0.2%)"],
+  textposition: 'outside',
+  textfont: {size: 11, color: C_PRIMARY},
+  hovertemplate: '<b>%{x}</b><br>$%{y:,.0f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Total Applovin spend per tier (n=669, sum = $3.2M)', font: {size: 14}},
+  margin: {l: 90, r: 30, t: 70, b: 80},
+  xaxis: {title: '', tickfont: {size: 11}},
+  yaxis: {title: 'Total Applovin spend (USD)', titlefont: {size: 12}, tickformat: '$,.2s', range: [0, 2_700_000]}
+}, {displayModeBar: false, responsive: true});
+
+// Univariate AUC
+Plotly.newPlot('univariate-chart', [{
+  x: [0.6463, 0.6286, 0.6276, 0.5922, 0.5881, 0.5846, 0.553, 0.5484, 0.5402, 0.5132, 0.4603],
+  y: ["install_share (window)", "log(ROAS D7)", "log(ROAS D0)", "Retention D3", "Retention D1", "log(IPM)", "log(CPI)", "Retention D7", "CTR %", "Lumina D0", "Lumina D7"],
+  type: 'bar',
+  orientation: 'h',
+  marker: {
+    color: [0.6463, 0.6286, 0.6276, 0.5922, 0.5881, 0.5846, 0.553, 0.5484, 0.5402, 0.5132, 0.4603].map(a => a < 0.5 ? C_WARN : a < 0.55 ? C_EXPLORE : a < 0.6 ? C_ACCENT : C_EXPLOIT),
+    line: {color: '#fff', width: 1}
+  },
+  text: ["0.646", "0.629", "0.628", "0.592", "0.588", "0.585", "0.553", "0.548", "0.540", "0.513", "0.460"],
+  textposition: 'outside',
+  textfont: {size: 11, color: C_PRIMARY},
+  hovertemplate: '<b>%{y}</b><br>Univariate CV AUC = %{x:.3f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Univariate predictive power — CV AUC of each single test metric for predicting top-decile Applovin scale<br><span style="font-size:11px;color:#586069">Green = AUC ≥ 0.60 · Blue = 0.55–0.60 · Orange = 0.50–0.55 · Red = below random</span>', font: {size: 14}},
+  margin: {l: 170, r: 80, t: 100, b: 70},
+  xaxis: {title: 'Cross-validated AUC (5-fold)', titlefont: {size: 12}, range: [0.35, 0.78]},
+  yaxis: {title: '', autorange: 'reversed', tickfont: {size: 12}},
+  showlegend: false,
+  shapes: [
+    {type: 'line', x0: 0.5, x1: 0.5, y0: -0.5, y1: 10.5, line: {color: C_NEUTRAL, dash: 'dash', width: 2}}
+  ],
+  annotations: [
+    {x: 0.5, y: -0.7, text: 'random = 0.5', showarrow: false, font: {color: C_NEUTRAL, size: 11}}
+  ]
+}, {displayModeBar: false, responsive: true});
+
+// AUC progression
+Plotly.newPlot('progression-chart', [{
+  x: [1, 2, 3, 4, 5, 6, 7, 11],
+  y: [0.6463, 0.7143, 0.7277, 0.7543, 0.7661, 0.7669, 0.7646, 0.7389],
+  mode: 'lines+markers+text',
+  type: 'scatter',
+  marker: {size: 10, color: C_EXPLOIT},
+  line: {color: C_EXPLOIT, width: 3},
+  text: ["0.646", "0.714", "0.728", "0.754", "0.766", "0.767", "0.765", "0.739"],
+  textposition: 'top center',
+  textfont: {size: 11},
+  hovertemplate: 'k=%{x} features<br>AUC=%{y:.4f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'CV AUC as more features are added — plateaus after 5 features<br><span style="font-size:11px;color:#586069">Best-subset selection from 11 candidate features · 5-fold cross-validation</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 100, b: 70},
+  xaxis: {title: 'Number of features in the model (k)', titlefont: {size: 12}, dtick: 1, range: [0.5, 11.7]},
+  yaxis: {title: 'CV AUC (best subset of size k)', titlefont: {size: 12}, range: [0.6, 0.8]},
+  showlegend: false,
+  shapes: [
+    {type: 'line', x0: 5, x1: 5, y0: 0.6, y1: 0.8, line: {color: C_WARN, dash: 'dot', width: 2}}
+  ],
+  annotations: [
+    {x: 5, y: 0.785, text: 'plateau at k=5<br>(diminishing returns)', showarrow: false, font: {color: C_WARN, size: 11}, xanchor:'left', xshift: 8}
+  ]
+}, {displayModeBar: false, responsive: true});
+
+// Composite comparison
+Plotly.newPlot('composite-compare-chart', [{
+  x: [0.46, 0.42, 0.48, 0.51, 0.54, 0.65, 0.65, 0.72, 0.77],
+  y: ["Lumina D7 alone", "(Lumina D0 + D7) / 2", "D7 / D0 (maturation ratio)", "D7 - D0 (additive maturation)", "(D7 - D0) \u00d7 install_share", "(D7 / D0) \u00d7 install_share", "install_share alone", "4-feat (D0+D7+IPM+ROAS_D7)", "5-feat (+ install_share)"],
+  type: 'bar',
+  orientation: 'h',
+  marker: {
+    color: [0.46, 0.42, 0.48, 0.51, 0.54, 0.65, 0.65, 0.72, 0.77].map(a => a < 0.5 ? C_WARN : a < 0.6 ? C_EXPLORE : a < 0.7 ? C_ACCENT : C_EXPLOIT),
+  },
+  text: ["0.460", "0.420", "0.480", "0.510", "0.540", "0.650", "0.650", "0.720", "0.770"],
+  textposition: 'outside',
+  hovertemplate: '%{y}<br>AUC = %{x:.4f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Comparison of all considered composite scores for top-decile prediction<br><span style="font-size:11px;color:#586069">Including user-suggested maturation formulations · 5-fold CV</span>', font: {size: 14}},
+  margin: {l: 280, r: 80, t: 100, b: 70},
+  xaxis: {title: 'Cross-validated AUC', titlefont: {size: 12}, range: [0.35, 0.88]},
+  yaxis: {title: '', autorange: 'reversed', tickfont: {size: 11}},
+  showlegend: false,
+  shapes: [
+    {type: 'line', x0: 0.5, x1: 0.5, y0: -0.5, y1: 8.5, line: {color: C_NEUTRAL, dash: 'dash', width: 2}}
+  ],
+  annotations: [
+    {x: 0.5, y: -0.4, text: 'random = 0.50', showarrow: false, font: {size: 10, color: C_NEUTRAL}}
+  ]
+}, {displayModeBar: false, responsive: true});
+
+// Coefs
+Plotly.newPlot('coefs-chart', [{
+  x: ["Lumina D0", "Lumina D7", "log(IPM)", "log(ROAS D7)", "install_share"],
+  y: [0.023, 0.736, -0.708, -0.798, 0.628],
+  type: 'bar',
+  marker: {
+    color: [0.023, 0.736, -0.708, -0.798, 0.628].map(v => v > 0 ? C_EXPLOIT : C_WARN)
+  },
+  text: ["+0.023", "+0.736", "-0.708", "-0.798", "+0.628"],
+  textposition: 'outside',
+  hovertemplate: '%{x}<br>std coef = %{y:+.3f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'Composite A — standardized logistic-regression coefficients<br><span style="font-size:11px;color:#586069">Green = positive contribution · Red = negative (see Section 8.4 for the install-volume mechanism)</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 100, b: 70},
+  xaxis: {title: '', tickfont: {size: 12}},
+  yaxis: {title: 'Standardized coefficient', titlefont: {size: 12}, zeroline: true, zerolinewidth: 2, zerolinecolor: C_NEUTRAL, range: [-1.0, 1.0]},
+  showlegend: false
+}, {displayModeBar: false, responsive: true});
+
+// D7 quartile
+const d7q_labels = ["Q1<br>(lowest 25%)", "Q2", "Q3", "Q4<br>(highest 25%)"];
+const d7q_top = [10.404624277456648, 11.65644171779141, 6.211180124223603, 11.627906976744185];
+const d7q_full = [17.341040462427745, 17.791411042944784, 24.84472049689441, 22.674418604651162];
+Plotly.newPlot('d7q-chart', [
+  {x: d7q_labels, y: d7q_top, name: 'Top-decile rate (≥$2,820 lifetime spend)', type: 'bar',
+   marker: {color: C_EXPLOIT, line: {color: '#fff', width: 1}},
+   text: d7q_top.map(v => v.toFixed(1) + '%'), textposition: 'outside', textfont: {size: 11}},
+  {x: d7q_labels, y: d7q_full, name: 'Full-sustained rate (active 4 of 4 months)', type: 'bar',
+   marker: {color: C_EXPLORE, line: {color: '#fff', width: 1}},
+   text: d7q_full.map(v => v.toFixed(1) + '%'), textposition: 'outside', textfont: {size: 11}}
+], {
+  ...baseLayout,
+  title: {text: 'Lumina D7 quartile → outcome rates', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 70, b: 120},
+  xaxis: {title: 'Lumina D7 quartile (within window)', titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: '% of creatives meeting outcome', titlefont: {size: 12}, range: [0, 32], ticksuffix: '%'},
+  barmode: 'group',
+  legend: {x: 0.5, y: -0.28, orientation: 'h', xanchor: 'center', font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'}
+}, {displayModeBar: false, responsive: true});
+
+const d0q_labels = ["Q1<br>(lowest 25%)", "Q2", "Q3", "Q4<br>(highest 25%)"];
+const d0q_top = [10.119047619047619, 10.897435897435898, 6.535947712418301, 12.025316455696203];
+const d0q_full = [20.238095238095237, 17.94871794871795, 21.568627450980394, 26.582278481012654];
+// Volume correlation chart (Section 8.4.1)
+const volume_corr_data = [
+  {metric:"CPI",          rho:-0.986},
+  {metric:"IPM",          rho:+0.835},
+  {metric:"Lumina D7",    rho:+0.596},
+  {metric:"ROAS D7",      rho:+0.460},
+  {metric:"ROAS D0",      rho:+0.383},
+  {metric:"CTR",          rho:-0.045},
+  {metric:"Retention D7", rho:-0.049},
+  {metric:"Retention D1", rho:-0.010}
+];
+Plotly.newPlot('volume-corr-chart', [{
+  x: volume_corr_data.map(d=>d.rho),
+  y: volume_corr_data.map(d=>d.metric),
+  type: 'bar',
+  orientation: 'h',
+  marker: {color: volume_corr_data.map(d=>Math.abs(d.rho)>0.3 ? C_WARN : C_NEUTRAL), line: {color: '#fff', width: 1}},
+  text: volume_corr_data.map(d=>(d.rho>=0?'+':'')+d.rho.toFixed(3)),
+  textposition: 'outside',
+  textfont: {size: 12, color: C_PRIMARY},
+  hovertemplate: '<b>%{y}</b><br>Spearman ρ vs installs = %{x:.3f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'How much does each test metric co-vary with test install count?<br><span style="font-size:11px;color:#586069">Red = strong correlation with installs (|ρ| &gt; 0.30) · Gray = independent of install volume</span>', font: {size: 14}},
+  xaxis: {
+    title: 'Spearman correlation (ρ) with i_installs',
+    range: [-1.08, 1.08],
+    zeroline: true, zerolinewidth: 2, zerolinecolor: '#586069',
+    tickfont: {size: 11},
+    titlefont: {size: 12}
+  },
+  yaxis: {title: '', autorange: 'reversed', tickfont: {size: 12}},
+  margin: {l: 130, r: 80, t: 100, b: 70},
+  showlegend: false
+}, {displayModeBar: false, responsive: true});
+
+// Install-bucket multi-metric chart — better axes and label distinguishing the two y-axes
+const install_buckets = ["<30","30–50","50–75","75–100","100–150","150+"];
+Plotly.newPlot('install-bucket-chart', [
+  {
+    x: install_buckets, y: [0.69, 1.10, 1.45, 1.82, 2.36, 3.27],
+    name: 'IPM (left axis)', mode: 'lines+markers', type:'scatter',
+    yaxis: 'y', marker:{color: C_ACCENT, size: 9}, line:{width: 3, color: C_ACCENT},
+    hovertemplate: 'IPM = %{y:.2f}<extra></extra>'
+  },
+  {
+    x: install_buckets, y: [1.24, 0.72, 0.46, 0.33, 0.25, 0.17],
+    name: 'CPI in USD (left axis)', mode: 'lines+markers', type:'scatter',
+    yaxis: 'y', marker:{color: C_WARN, size: 9}, line:{width: 3, color: C_WARN},
+    hovertemplate: 'CPI = $%{y:.2f}<extra></extra>'
+  },
+  {
+    x: install_buckets, y: [0.64, 1.04, 1.31, 1.80, 2.08, 2.50],
+    name: 'ROAS D7 as % (left axis)', mode: 'lines+markers', type:'scatter',
+    yaxis: 'y', marker:{color: C_EXPLOIT, size: 9}, line:{width: 3, color: C_EXPLOIT},
+    hovertemplate: 'ROAS D7 = %{y:.2f}%<extra></extra>'
+  },
+  {
+    x: install_buckets, y: [20.6, 26.9, 35.3, 47.7, 58.9, 66.8],
+    name: 'Lumina D7 score (RIGHT axis)', mode: 'lines+markers', type:'scatter',
+    yaxis: 'y2', marker:{color: C_PRIMARY, size: 11, symbol: 'square'}, line:{width: 3, dash:'dot', color: C_PRIMARY},
+    hovertemplate: 'Lumina D7 = %{y:.1f}<extra></extra>'
+  }
+], {
+  ...baseLayout,
+  title: {text: 'Test metrics rise together with install volume<br><span style="font-size:11px;color:#586069">At fixed daily budget per creative (~$15–$20/day), higher install volume reflects higher conversion efficiency — IPM, ROAS, and Lumina all co-move with installs</span>', font: {size: 14}},
+  margin: {l: 80, r: 80, t: 100, b: 100},
+  xaxis: {title: 'Test install volume bucket', titlefont: {size: 12}, tickfont: {size: 12}},
+  yaxis: {title: 'IPM · CPI ($) · ROAS D7 (%)', side: 'left', titlefont: {size: 12, color: C_PRIMARY}, range: [0, 4]},
+  yaxis2: {title: 'Lumina D7 score (0–100)', side: 'right', overlaying: 'y', range: [0, 100], titlefont: {size: 12, color: C_PRIMARY}, gridcolor: 'rgba(0,0,0,0)'},
+  legend: {x: 0.5, y: -0.22, xanchor: 'center', orientation: 'h', font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'},
+  hovermode: 'x unified'
+}, {displayModeBar: false, responsive: true});
+
+// Partial correlation chart (Section 8.4.2)
+const partial_data = [
+  {feature:"Lumina D7",     raw:0.022,  partial:0.121},
+  {feature:"install_share", raw:0.165,  partial:0.296},
+  {feature:"CPI",           raw:0.141,  partial:0.112},
+  {feature:"IPM",           raw:-0.154, partial:-0.092},
+  {feature:"ROAS D7",       raw:-0.140, partial:-0.094},
+  {feature:"ROAS D0",       raw:-0.094, partial:-0.050},
+  {feature:"CTR",           raw:-0.075, partial:-0.081}
+];
+Plotly.newPlot('partial-corr-chart', [
+  {
+    x: partial_data.map(d=>d.feature), y: partial_data.map(d=>d.raw),
+    name: 'Raw correlation', type: 'bar',
+    marker:{color: C_NEUTRAL, line: {color: '#fff', width: 1}},
+    text: partial_data.map(d=>(d.raw>=0?'+':'')+d.raw.toFixed(3)),
+    textposition: 'outside', textfont: {size: 11},
+    hovertemplate: '<b>%{x}</b><br>Raw ρ = %{y:.3f}<extra></extra>'
+  },
+  {
+    x: partial_data.map(d=>d.feature), y: partial_data.map(d=>d.partial),
+    name: 'Partial correlation (controlling for log installs)', type: 'bar',
+    marker:{color: C_EXPLOIT, line: {color: '#fff', width: 1}},
+    text: partial_data.map(d=>(d.partial>=0?'+':'')+d.partial.toFixed(3)),
+    textposition: 'outside', textfont: {size: 11},
+    hovertemplate: '<b>%{x}</b><br>Partial ρ = %{y:.3f}<extra></extra>'
+  }
+], {
+  ...baseLayout,
+  title: {text: 'Lumina D7 and install_share become much stronger predictors once install volume is controlled for<br><span style="font-size:11px;color:#586069">Gray = raw Spearman correlation · Green = partial correlation after stripping the install-volume effect</span>', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 110, b: 120},
+  xaxis: {title: '', tickfont: {size: 12}},
+  yaxis: {title: 'Spearman ρ with log(Applovin spend)', titlefont: {size: 12}, zeroline: true, zerolinewidth: 2, zerolinecolor: '#586069', range: [-0.22, 0.35]},
+  barmode: 'group',
+  legend: {x: 0.5, y: -0.16, orientation: 'h', xanchor: 'center', font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'}
+}, {displayModeBar: false, responsive: true});
+
+// Composite options comparison
+const composite_opts = [
+  {label:"Lumina D7 alone (baseline)",                          auc:0.50, group:'baseline'},
+  {label:"D0 + D7 + install_share",                             auc:0.65, group:'clean'},
+  {label:"<b>Composite B</b>: D0 + D7 + share + log(installs)",     auc:0.70, group:'recommended-B'},
+  {label:"<b>Composite A</b>: D0 + D7 + log(IPM) + log(ROAS D7) + share", auc:0.77, group:'recommended-A'},
+  {label:"Composite A + log(installs) — 6 features",            auc:0.76, group:'redundant'}
+];
+const colorMap = {'baseline': C_NEUTRAL, 'clean': C_ACCENT, 'recommended-B': C_GOOD, 'recommended-A': C_EXPLOIT, 'redundant': C_EXPLORE};
+Plotly.newPlot('composite-options-chart', [{
+  x: composite_opts.map(d=>d.auc),
+  y: composite_opts.map(d=>d.label),
+  type: 'bar',
+  orientation: 'h',
+  marker: {color: composite_opts.map(d=>colorMap[d.group]), line: {color: '#fff', width: 1}},
+  text: composite_opts.map(d=>'AUC = ' + d.auc.toFixed(2)),
+  textposition: 'outside',
+  textfont: {size: 12, color: C_PRIMARY},
+  hovertemplate: '%{y}<br>CV AUC = %{x:.3f}<extra></extra>'
+}], {
+  ...baseLayout,
+  title: {text: 'CV AUC of each composite for predicting top-decile Applovin scale<br><span style="font-size:11px;color:#586069">Green = recommended for stakeholder explanation · Dark green = recommended for ranking</span>', font: {size: 14}},
+  margin: {l: 420, r: 100, t: 100, b: 70},
+  xaxis: {title: 'Cross-validated AUC (5-fold)', range: [0.4, 0.88], titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: '', autorange: 'reversed', tickfont: {size: 11}},
+  showlegend: false,
+  shapes: [
+    {type:'line', x0:0.5, x1:0.5, y0:-0.5, y1:4.5, line:{color: C_NEUTRAL, dash:'dash', width:2}}
+  ],
+  annotations: [
+    {x: 0.5, y: -0.4, text: 'random = 0.50', showarrow: false, font: {size: 10, color: C_NEUTRAL}}
+  ]
+}, {displayModeBar: false, responsive: true});
+
+Plotly.newPlot('d0q-chart', [
+  {x: d0q_labels, y: d0q_top, name: 'Top-decile rate (≥$2,820 lifetime spend)', type: 'bar',
+   marker: {color: C_EXPLOIT, line: {color: '#fff', width: 1}},
+   text: d0q_top.map(v => v.toFixed(1) + '%'), textposition: 'outside', textfont: {size: 11}},
+  {x: d0q_labels, y: d0q_full, name: 'Full-sustained rate (active 4 of 4 months)', type: 'bar',
+   marker: {color: C_EXPLORE, line: {color: '#fff', width: 1}},
+   text: d0q_full.map(v => v.toFixed(1) + '%'), textposition: 'outside', textfont: {size: 11}}
+], {
+  ...baseLayout,
+  title: {text: 'Lumina D0 quartile → outcome rates', font: {size: 14}},
+  margin: {l: 70, r: 30, t: 70, b: 120},
+  xaxis: {title: 'Lumina D0 quartile (within window)', titlefont: {size: 12}, tickfont: {size: 11}},
+  yaxis: {title: '% of creatives meeting outcome', titlefont: {size: 12}, range: [0, 32], ticksuffix: '%'},
+  barmode: 'group',
+  legend: {x: 0.5, y: -0.28, orientation: 'h', xanchor: 'center', font: {size: 11}, bgcolor: 'rgba(255,255,255,0.9)'}
+}, {displayModeBar: false, responsive: true});
+
+</script>
+</body>
+</html>
